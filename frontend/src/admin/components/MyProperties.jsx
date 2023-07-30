@@ -1,16 +1,14 @@
-import axios from 'axios'
 import React, { useEffect, useState } from 'react'
-import baseURL from '../../config'
-import { useSelector } from 'react-redux'
-import {GiConfirmed} from "react-icons/gi"
 import FeaturesModal from "./FeaturesModal"
 import EditProperties from './EditProperties'
 import {AiTwotoneEdit} from "react-icons/ai"
 import {MdDelete} from "react-icons/md"
-import { Link, Navigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import OwnerModal from './OwnerModal'
 import {MdDeleteOutline} from 'react-icons/md'
 import { useNavigate } from 'react-router-dom';
+import { deleteCab, deleteHomeStay, deleteHotel, getOwnerProperties } from '../../api/OwnerAPI'
+import OwnerTokenExpire from './OwnerTokenExpire'
 
 function MyProperties() {
      
@@ -28,20 +26,16 @@ function MyProperties() {
     const [deleteModal, setDeleteModal] = useState(false)
     const [deleteId, setDeleteId] = useState('')
     const [deleteActive, setDeleteActive] = useState('')
+    const [errorCatch, setErrorCatch] = useState('')
 
-    const adminsLogin = useSelector(state => state.adminRegister)
-    const { loading,error } = adminsLogin
-
-    if(localStorage.ownerInfo !== undefined){
-      var owner = JSON.parse(localStorage.ownerInfo);
-    }
-
+    
     const ownerInfo = JSON.parse(localStorage.ownerInfo);
     
     const id = ownerInfo._id
     useEffect(()=>{
+      try {
         async function getProperties(){
-            const {data} = await axios.get(`${baseURL}/owner/getmyproperties/${id}`)
+            const {data} = await getOwnerProperties(id)
             if(data){
                 setCabsdata(data.cabsdata)
                 setHomestaydata(data.homestaydata)
@@ -49,7 +43,15 @@ function MyProperties() {
             }
         }
         getProperties()
-      },[successDelete])
+      } catch (error) {
+        if(error?.response?.data?.message === 'jwt expired'){
+          localStorage.removeItem('ownerInfo')
+          setErrorCatch(error.response.data.message)
+        }else{
+            console.log(error);
+        }
+      }
+      },[id,successDelete])
 
       useEffect(()=>{
           if(active === 'Cabs'){
@@ -68,7 +70,7 @@ function MyProperties() {
         console.log(id, type);
         if(type === "Cabs"){
              try {
-               const {data} = await axios.delete(`${baseURL}/owner/deletecabproperty/${id}`)
+               const {data} = await deleteCab(id)
                if(data){
                  console.log(data);
                  setDeleteModal(false)
@@ -76,11 +78,16 @@ function MyProperties() {
                  setSuccessDelete(!successDelete)
                }
              } catch (error) {
-               console.log(error);
+                if(error?.response?.data?.message === 'jwt expired'){
+                  localStorage.removeItem('ownerInfo')
+                  setErrorCatch(error.response.data.message)
+                  }else{
+                      console.log(error);
+                  }
              }
         }else if(type === "HomeStays"){
             try {
-              const {data} = await axios.delete(`${baseURL}/owner/deletehomstayproperty/${id}`)
+              const {data} = await deleteHomeStay(id)
               if(data){
                 console.log(data);
                 setDeleteModal(false)
@@ -88,11 +95,16 @@ function MyProperties() {
                 setSuccessDelete(!successDelete)
               }
             } catch (error) {
-              console.log(error);
+              if(error?.response?.data?.message === 'jwt expired'){
+                localStorage.removeItem('ownerInfo')
+                setErrorCatch(error.response.data.message)
+                }else{
+                    console.log(error);
+                }
             }
         }else if(type === "Hotels"){
             try {
-              const {data} = await axios.delete(`${baseURL}/owner/deletehotelproperty/${id}`)
+              const {data} = await deleteHotel(id)
               if(data){
                 console.log(data);
                 setDeleteModal(false)
@@ -100,7 +112,12 @@ function MyProperties() {
                 setSuccessDelete(!successDelete)
               }
             } catch (error) {
-              console.log(error);
+                if(error?.response?.data?.message === 'jwt expired'){
+                  localStorage.removeItem('ownerInfo')
+                  setErrorCatch(error.response.data.message)
+                }else{
+                    console.log(error);
+                }
             }
         }
       }
@@ -108,12 +125,13 @@ function MyProperties() {
 
   return (
     <>
-      
+    <div className='flex justify-center'>
+     <div className='container min-h-screen mt-32 '>
        
        {!openEdit ?
-         <div className='min-h-screen items-center lg:w-8/12 md:w-9/12 sm:w-9/12 lg:my-10 sm:my-7 rounded-3xl justify-center bg-gray-50 bg-transparent'>
+         <div className='min-h-screen items-center lg:w-8/12 md:w-9/12 sm:w-9/12 lg:my-10 sm:my-7 mx-auto rounded-3xl justify-center bg-gray-50 bg-transparent px-3'>
            
-          <div className='grid grid-cols-1 lg:grid-cols-3 text-center mb-7 pt-10'>
+          <div className='grid grid-cols-1 lg:grid-cols-3 text-center font-bold text-lg mb-7 pt-10'>
              <div className='w-full px-24' onClick={()=>setActive('Cabs')}>
                 {active === "Cabs" ?
                  <h1 className='text-red-600'>Cabs</h1> : <h1>Cabs</h1>
@@ -235,14 +253,14 @@ function MyProperties() {
                               </div>
                      </div>
                     <div className="w-full lg:w-5/12">
-                      <img className="sm:block w-full h-40 p-2" src={element.images[0] && element?.images[0].url} alt="property image" />
+                      <img className="sm:block w-full h-40 p-2" src={element.images[0] && element?.images[0].url} alt="property" />
                       <div className='flex'>
 
                         <div className='w-full lg:w-6/12 p-2'>
-                          <img className=" sm:block w-full h-full" src={element.images[1] && element?.images[1].url} alt="property image" />
+                          <img className=" sm:block w-full h-full" src={element.images[1] && element?.images[1].url} alt="property" />
                         </div>
                         <div className='w-full lg:w-6/12 p-2'>
-                          <img  className=" block w-full h-full" src={element.images[2] && element?.images[2].url} alt="property image" />
+                          <img  className=" block w-full h-full" src={element.images[2] && element?.images[2].url} alt="property" />
                         </div>
                       </div>
                     </div>
@@ -288,6 +306,11 @@ function MyProperties() {
                 </div>
             </div>
         </OwnerModal>
+        </div>
+        </div>
+        {errorCatch !== '' &&
+            <OwnerTokenExpire message={errorCatch}/>
+        }
     </>
   )
 }

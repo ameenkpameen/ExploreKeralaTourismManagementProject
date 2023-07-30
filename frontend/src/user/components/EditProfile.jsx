@@ -1,11 +1,13 @@
 import React, { useState } from 'react'
 import { useDispatch } from 'react-redux';
 import { editProfile } from '../../actions/userActions';
+import TokenExpireModal from './TokenExpireModal';
 
 function EditProfile(props) {
     const [firstname,setFirstname] = useState(props.profileData.firstname)
     const [lastname,setLastname] = useState(props.profileData.lastname)
     const [phonenumber,setPhonenumber] = useState(props.profileData.phonenumber)
+    const [errorCatch, setErrorCatch]= useState('')
     const [email,setEmail] = useState(props.profileData.email)
     const dispatch = useDispatch()
     // const adminsLogin = useSelector(state => state.adminEditProfile)
@@ -17,8 +19,11 @@ function EditProfile(props) {
         try {
             dispatch(editProfile(id, firstname, lastname,phonenumber, email));
             props.setEdit(false)
-        
         } catch (error) {
+            if(error.response.data.message === 'jwt expired'){
+                localStorage.removeItem('userInfo')
+                setErrorCatch(error.response.data.message)
+            }
             console.log(error);
         }
     }
@@ -76,6 +81,10 @@ function EditProfile(props) {
                               </button>
                           </div>
                       </form>
+
+                      {errorCatch !== '' &&
+                            <TokenExpireModal message={errorCatch} />
+                    }
                       
         </>
   )

@@ -1,142 +1,233 @@
-import React, { useState } from 'react'
-import { useDispatch} from 'react-redux';
-import { Link } from 'react-router-dom';
+import React, { useEffect } from 'react'
+import { useState } from "react";
+import {  useDispatch, useSelector } from 'react-redux';
+import { logout } from '../../actions/userActions';
+import { Link, useNavigate } from 'react-router-dom'
 import { adminLogout } from '../../actions/adminActions';
-
-import {HiMenuAlt3} from "react-icons/hi"
-
+import { getPendingOrderCount } from '../../api/OwnerAPI';
+import OwnerTokenExpire from './OwnerTokenExpire';
 
 function OwnerHeader() {
 
-
-    const [open, setOpen] = useState(true);
-
-   if(localStorage.ownerInfo !== undefined){
-        var admin = JSON.parse(localStorage.ownerInfo);
-      }
-  const [navbar, setNavbar] = useState(false)
+  const navigate = useNavigate()
+  const [open, setOpen] = useState(true);
+  //   const {loading,error,ownerInfo} = ownerLogin
+  const [pendingOrder, setPendingOrder] = useState(0)
+  const [errorCatch, setErrorCatch] = useState('')
   
-  const dispatch = useDispatch()
-
-  const logoutHandler = ()=>{
-      dispatch(adminLogout())
-  }
-
+  if(localStorage.ownerInfo !== undefined){
+      var admin = JSON.parse(localStorage.ownerInfo);
+    }
+    
+    // var id = admin && admin._id 
+    
+    const ownerLogin = useSelector((state)=> state.ownerLogin)
+    const dispatch = useDispatch()
+    
+    
+    // useEffect(()=>{
+    //     try {
+    //         if(id !== undefined){
+    //             const getOrderPending = async()=>{
+    //                 const {data} = await getPendingOrderCount(id)
+    //                 if(data){
+    //                     setPendingOrder(data.OrderCount)
+    //                 }
+    //             }
+    //             getOrderPending()
+    //         }
+    //     } catch (error) {
+    //         if(error?.response?.data?.message === 'jwt expired'){
+    //             localStorage.removeItem('ownerInfo')
+    //             setErrorCatch(error.response.data.message)
+    //         }else{
+    //             console.log(error.response.data.message);
+    //         }
+    //     }
+    // },[])
+    const logoutHandler = ()=>{
+        dispatch(adminLogout())
+        // localStorage.removeItem("ownerInfo")
+    }
+    
+  const [navIsShown, setnavIsShown] = useState(false);
+  const toggleNavIsShown = () => {
+    setnavIsShown((navIsShown) => !navIsShown);
+  };
+  
 
   return (
     <div>   
           
-            <nav className="w-full bg-black shadow fixed   inset-x-0 z-50">
-                <div className="justify-between px-4 mx-auto lg:max-w-7xl md:items-center md:flex md:px-8">
-                    <div>
-                        <div className="flex items-center justify-between py-3 md:py-5 md:block">
-                        <div className='flex items-center justify-between'>
-                                <div className=' flex justify-end text-gray-50'>
-                                            <HiMenuAlt3 size={26} className='cursor-pointer' onClick={()=>setOpen(!open)}/>
-                                </div>
-                                <h3 className="rounded-lg w-48 font-LobsterTwo text-3xl text-center text-white">
-                                    <span className='font-Squada font-bold text-red-400'>E</span>xplore<span className='font-Squada font-bold text-red-400'>K</span>erala
-                                </h3>
-                        </div>
-                            <div className="md:hidden">
-                                <button
-                                    className="p-2 text-gray-700 rounded-md outline-none focus:border-gray-400 focus:border"
-                                    onClick={() => setNavbar(!navbar)}
-                                >
-                                    {navbar ? (
-                                        <svg
-                                            xmlns="http://www.w3.org/2000/svg"
-                                            className="w-6 h-6 text-white"
-                                            viewBox="0 0 20 20"
-                                            fill="currentColor"
-                                        >
-                                            <path
-                                                fillRule="evenodd"
-                                                d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                                                clipRule="evenodd"
-                                            />
-                                        </svg>
-                                    ) : (
-                                        <svg
-                                            xmlns="http://www.w3.org/2000/svg"
-                                            className="w-6 h-6 text-white"
-                                            fill="none"
-                                            viewBox="0 0 24 24"
-                                            stroke="currentColor"
-                                            strokeWidth={2}
-                                        >
-                                            <path
-                                                strokeLinecap="round"
-                                                strokeLinejoin="round"
-                                                d="M4 6h16M4 12h16M4 18h16"
-                                            />
-                                        </svg>
-                                    )}
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                    <div>
-                        <div
-                            className={`flex-1 justify-self-center pb-3 mt-8 md:block md:pb-0 md:mt-0 ${
-                                navbar ? "block" : "hidden"
-                            }`}
+            
+
+            <nav className='flex justify-between items-center h-20 px-4 absolute top-0 left-0 z-10 w-full text-white bg-[#1e1b4b]'>
+                <h3 className="rounded-lg w-48 font-LobsterTwo text-3xl text-center text-white">
+                    <span className='font-Squada font-bold text-red-400'>E</span>xplore<span className='font-Squada font-bold text-red-400'>K</span>erala
+                </h3>
+            <ul className='hidden md:flex gap-6'>
+                <li>
+                <Link to='/owner'>Home</Link>
+                </li>
+                <li>
+                <Link to='/owner/addproperties'>Add Properties</Link>
+                </li>
+                <li>
+                <Link to='/owner/myproperties' href=''>My Properties</Link>
+                </li>
+                <li>
+                  <Link to='/owner/mypropertyorders' className='relative inline-block'>Orders
+                        {/* <span className="absolute top-0 right-0 transform translate-x-1/2 -translate-y-1/2 bg-red-500 text-white font-bold rounded-full p-1 text-xxs">
+                            {pendingOrder}
+                        </span> */}
+                  </Link>
+                </li>
+                <li>
+                <Link to='/owner/addbanners'>Add Banners</Link>
+                </li>
+                <li>
+                <Link to='/owner/mychats'>Chats</Link>
+                </li>
+            </ul>
+                 <div className='hidden md:flex'>
+                
+                
+                <div>
+                {!admin && 
+                     
+                           <Link
+                        to="/owner/login"
+                        className="flex flex-row gap-2 w-full px-4 py-2 text-center text-white "
                         >
-                            <ul className="items-center justify-center space-y-8 md:flex md:space-x-6 md:space-y-0">
-                                <li className="text-white hover:text-indigo-200">
-                                    <h1 className='font-bold'>Admin Panel</h1>
-                                </li>
-                                
-                            </ul>
-
-                            <div className="mt-3 space-y-2 lg:hidden md:inline-block">
-                            {admin && <Link
-                                onClick={logoutHandler}
-                                className="inline-block w-full px-4 py-2 text-center text-white bg-gray-600 rounded-md shadow hover:bg-gray-800"
+                        <svg
+                            xmlns='http://www.w3.org/2000/svg'
+                            fill='none'
+                            viewBox='0 0 24 24'
+                            strokeWidth={1.5}
+                            stroke='currentColor'
+                            className='w-6 h-6'
                             >
-                                Logout
-                            </Link>}
-                            {admin && <Link
-                                
-                                className="inline-block w-full px-4 py-2 text-center text-gray-800 bg-white rounded-md shadow hover:bg-gray-100"
-                            >
-                                {admin.firstname +" "+ admin.lastname}
-                            </Link>}
-
-                            {!admin && <Link
-                                to="/owner/login"
-                                className="inline-block w-full px-4 py-2 text-center text-gray-800 bg-white rounded-md shadow hover:bg-gray-100"
-                            >
-                                Login
-                            </Link>}
-                    </div>
-                        </div>
-                    </div>
-                    <div className="hidden space-x-2 md:inline-block">
-                    
-                    { admin &&
+                            <path
+                                strokeLinecap='round'
+                                strokeLinejoin='round'
+                                d='M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z'
+                            />
+                            </svg>
+                        <p>Sign in</p>
+                        </Link>
+                     
+                       }
+                {admin && 
+                        <div className='flex flex-row'>
                         <Link
-                        onClick={logoutHandler}
-                        className="px-4 py-2 text-white bg-gray-600 rounded-md shadow hover:bg-gray-800"
-                    >
-                        Logout
-                    </Link>
-                    }
-                        
-                        
-                        {!admin && <Link
-                            to="/owner/login"
-                            className="px-4 py-2 text-white bg-gray-600 rounded-md shadow hover:bg-gray-800"
+                            to="/owner/profile"
+                            className="flex flex-row gap-2 w-full px-4 py-2 text-center text-white "
                         >
-                            Sign in
-                        </Link>}
-                        
-                    </div>
+                            <svg
+                            xmlns='http://www.w3.org/2000/svg'
+                            fill='none'
+                            viewBox='0 0 24 24'
+                            strokeWidth={1.5}
+                            stroke='currentColor'
+                            className='w-6 h-6'
+                            >
+                            <path
+                                strokeLinecap='round'
+                                strokeLinejoin='round'
+                                d='M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z'
+                            />
+                            </svg>
+                            <p>Profile</p>
+                        </Link>
+                        <Link
+                            onClick={logoutHandler}
+                            className="flex flex-row gap-2 w-full px-4 py-2 text-center text-white"
+                        >
+                            Logout
+                        </Link>
+                        </div>
+                        }
                 </div>
-            </nav>
+                    
+                        
+                
+            </div>
+            {!navIsShown && (
+                <svg
+                xmlns='http://www.w3.org/2000/svg'
+                fill='none'
+                viewBox='0 0 24 24'
+                strokeWidth={1.5}
+                stroke='currentColor'
+                className='w-6 h-6 md:hidden'
+                onClick={toggleNavIsShown}
+                >
+                <path
+                    strokeLinecap='round'
+                    strokeLinejoin='round'
+                    d='M3.75 6.75h16.5M3.75 12h16.5M12 17.25h8.25'
+                />
+                </svg>
+            )}
+            {navIsShown && (
+                <div className='md:hidden absolute z-10 top-0 left-0 w-full bg-gray-100/90 text-black px-4 py-6'>
+                <div className='flex justify-between'>
+                <h3 className="rounded-lg w-48 font-LobsterTwo text-3xl text-center text-gray-950">
+                    <span className='font-Squada font-bold text-red-400'>E</span>xplore<span className='font-Squada font-bold text-red-400'>K</span>erala
+                </h3>
+                    <svg
+                    xmlns='http://www.w3.org/2000/svg'
+                    fill='none'
+                    viewBox='0 0 24 24'
+                    strokeWidth={1.5}
+                    stroke='currentColor'
+                    className='w-6 h-6'
+                    onClick={toggleNavIsShown}
+                    >
+                    <path
+                        strokeLinecap='round'
+                        strokeLinejoin='round'
+                        d='M6 18L18 6M6 6l12 12'
+                    />
+                    </svg>
+                </div>
+                <ul className='mt-5 mb-4'>
+                    <li className='border-b-2 border-b-gray-600'>
+                    <Link to='/owner'>Home</Link>
+                    </li>
+                    <li className='border-b-2 border-b-gray-600'>
+                    <Link to='/owner/addproperties'>Add Properties</Link>
+                    </li>
+                    <li className='border-b-2 border-b-gray-600'>
+                    <Link to='/owner/myproperties' href=''>My Properties</Link>
+                    </li>
+                    <li className='border-b-2 border-b-gray-600'>
+                    <Link to='/owner/mypropertyorders'>Orders</Link>
+                    </li>
+                    <li className='border-b-2 border-b-gray-600'>
+                    <Link to='/owner/addbanners'>Add Banners</Link>
+                    </li>
+                    <li className='border-b-2 border-b-gray-600'>
+                    <Link to='/owner/mychats'>Chats</Link>
+                    </li>
+                </ul>
+                  <button className='w-full mb-4 btn'>Search</button>
+                  {admin ?
+                    <>
+                        <button onClick={()=>navigate('/owner/profile')} className='w-full mb-4 btn'>My Profile</button> 
+                        <button onClick={()=>logoutHandler} className="w-full mb-4 btn"> Logout </button>
+                    </> :
+                    <button onClick={()=>navigate('/owner/login')} className='w-full mb-4 btn'>Login</button>
+                  }
+                </div>
+            )}
+        </nav>
            {/* {admin &&
              <SideBar />
             } */}
+            {errorCatch !== '' &&
+                <OwnerTokenExpire message={errorCatch}/>
+            }
     </div>
   )
 }

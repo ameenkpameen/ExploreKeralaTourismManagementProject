@@ -6,6 +6,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
 import { register } from '../../actions/userActions'
 
+
 function SignupPage() {
   const navigate = useNavigate()
   const [firstname, setFirstname] = useState("")
@@ -15,8 +16,12 @@ function SignupPage() {
   const [password, setPassword] = useState("")
   const [confirmpassword, setConfirmpassword] = useState("")
   const [message, setMessage] = useState(null)
+  const [passwordError, setPasswordError] = useState('')
+  const [emailError, setEmailError] = useState('')
+  const [phoneError, setPhoneError] = useState('')
 
   const dispatch = useDispatch()
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
   const userRegister = useSelector((state)=> state.userRegister)
   const {loading, error, userInfo} = userRegister
@@ -32,7 +37,29 @@ function SignupPage() {
     if(password !== confirmpassword){
         setMessage("Passwords do not match")
     }else{
-        dispatch(register(firstname,lastname,phonenumber,email,password))
+        if(passwordError === '' && emailError === '' && phoneError === ''){
+            dispatch(register(firstname,lastname,phonenumber,email,password))
+        }
+    }
+  }
+
+  const checkEmail = ()=>{
+      if(!emailRegex.test(email)){
+         setEmailError(`Email ${email} is not a valid email`)
+      }else{
+        setEmailError('')
+      }
+  }
+
+  
+
+  const checkPassword = ()=>{
+    if(password.length > 0){
+        if(password.length < 8){
+            setPasswordError('Password should contain atleast 8 characters')
+        }else{
+            setPasswordError('')
+        }
     }
   }
 
@@ -97,6 +124,9 @@ function SignupPage() {
                             >
                                 Phone Number
                             </label>
+                            {phoneError &&
+                               <p className='text-center text-red-600'>{phoneError}</p>
+                            }
                             <div className="flex flex-col items-start">
                                 <input
                                     type="number"
@@ -114,11 +144,15 @@ function SignupPage() {
                             >
                                 Email
                             </label>
+                            {emailError &&
+                               <p className='text-center text-red-600'>{emailError}</p>
+                            }
                             <div className="flex flex-col items-start">
                                 <input
                                     type="email"
                                     name="email"
                                     value={email}
+                                    onBlur={checkEmail}
                                     onChange={(e) => setEmail(e.target.value)}
                                     className="block w-full px-4 py-2 mt-2 text-purple-700 bg-white border rounded-md focus:border-purple-400 focus:ring-purple-300 focus:outline-none focus:ring focus:ring-opacity-40"
                                 />
@@ -131,11 +165,15 @@ function SignupPage() {
                             >
                                 Password
                             </label>
+                            {passwordError &&
+                               <p className='text-center text-red-600'>{passwordError}</p>
+                            }
                             <div className="flex flex-col items-start">
                                 <input
                                     type="password"
                                     name="password"
                                     value={password}
+                                    onBlur={checkPassword}
                                     onChange={(e) => setPassword(e.target.value)}
                                     className="block w-full px-4 py-2 mt-2 text-purple-700 bg-white border rounded-md focus:border-purple-400 focus:ring-purple-300 focus:outline-none focus:ring focus:ring-opacity-40"
                                 />

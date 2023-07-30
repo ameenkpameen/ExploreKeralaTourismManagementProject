@@ -1,0 +1,27 @@
+import useraxiosInstance from "../utils/axiosApi";
+
+export const getDestination = ()=> useraxiosInstance.get(`/getdestinations`)
+export const getDestinationData = (pageNumber,dataPerPage)=> useraxiosInstance.get(`/getdestinationdatas/${pageNumber}/${dataPerPage}`)
+export const getDestinationProperties = (destination)=> useraxiosInstance.get(`/destinationproperties/${destination}`)
+export const getBanners = useraxiosInstance.get(`/getbanners`)
+export const savingOrder = (orderData)=> useraxiosInstance.post('/ordersave', orderData)
+export const getFilterData = (destination,fromDate,toDate,type,numberOfPeople,priceLimit) => useraxiosInstance.post(`/getfiltereddata`,{destination,fromDate,toDate,type,numberOfPeople,priceLimit})
+export const getProfileData = (id)=>useraxiosInstance.get(`/getprofile/${id}`)
+export const editProfileData = (id,firstname,lastname,phonenumber,email,config)=>useraxiosInstance.put(`/editprofile/${id}`,{firstname,lastname,phonenumber,email},config)
+export const getOrdersData = (id)=> useraxiosInstance.get(`/getorders/${id}`)
+export const cancelOrderData = (id,type)=> useraxiosInstance.post(`/cancelorder/${id}/${type}`)
+export const getOrderDetails = (id)=>useraxiosInstance.get(`/getorderdetails/${id}`)
+export const getAvailableCoupens = (type)=> useraxiosInstance.get(`/getcoupens/${type}`)
+export const checkCoupen = (coupenCode,costomer,price)=> useraxiosInstance.post(`/coupensave`,{coupenCode,costomer,price})
+export const walletOrderChange = (costomerId, orderId, amountPayable ,discount,type,fromDate,toDate,property,coupenCode)=> useraxiosInstance.post(`/walletorderchange`,{costomerId, orderId, amountPayable ,discount,type,fromDate,toDate,property,coupenCode})
+export const getCoupensForUsers = (type)=> useraxiosInstance.get(`/getcoupens/${type}`)
+export const stripePayment = (amount,id)=> useraxiosInstance.post(`/payment`,{amount,id})
+export const saveStripeOrder = (orderData,discount,coupenCode)=> useraxiosInstance.post(`/stripeorderchange`,{orderData,discount,coupenCode})
+export const getDestinationNames = ()=> useraxiosInstance.get(`/getdestinationnames`)
+export const getOwnerData = (id)=> useraxiosInstance.get(`/getownerdata/${id}`)
+
+
+export const createChatWithOwner = (senderId,receiverId)=> useraxiosInstance.post(`/chat/create`,{senderId,receiverId})
+export const getUserChats = (id)=> useraxiosInstance.get(`/chat/getchat/${id}`)
+export const getMessages = (id)=> useraxiosInstance.get(`/message/${id}`)
+export const addMessage = (data)=> useraxiosInstance.post(`/message/add`, data)

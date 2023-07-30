@@ -3,14 +3,13 @@ import NavbarPart from '../components/NavbarPart'
 import Sidebar from '../components/Sidebar'
 import Footer from '../components/footer'
 import Checkout from '../components/Checkout'
+import image from '../../../src/assets/images/photographer-stands-with-camera-shore-with-great-evening-sky-him.jpg'
 
 function CheckoutPage() {
   return (
-    <div>
+    <div className='bg-opacity-70' style={{ backgroundImage: `url(${image})`, backgroundSize: 'cover'  }}>
       <NavbarPart />
-         <Sidebar>
             <Checkout />
-         </Sidebar>
         <Footer />
     </div>
   )

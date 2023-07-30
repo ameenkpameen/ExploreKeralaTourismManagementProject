@@ -32,7 +32,7 @@ function OwnerLogin() {
 
   return (
     <>
-      <OwnerHeader /> 
+      {/* <OwnerHeader />  */}
       <div className="relative flex flex-col justify-center min-h-screen overflow-hidden px-10 " >
             <div className='flex items-center justify-center bg-cover'>
                 <h1 className=" py-2 rounded-lg w-48 font-LobsterTwo text-3xl mt-24 text-center text-black">

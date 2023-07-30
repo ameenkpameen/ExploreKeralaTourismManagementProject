@@ -1,8 +1,10 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import {AiFillLeftCircle} from 'react-icons/ai'
 import {AiFillRightCircle} from 'react-icons/ai'
 
 function ImageSlider({slides}) {
+
+    
     const [currentIndex, setCurrentIndex] =useState(0)
     const sliderStyles = {
         height: '100%',
@@ -14,7 +16,7 @@ function ImageSlider({slides}) {
       var slideStyles = {
           width: '100%',
           height: '100%',
-          borderRadius: '5px',
+          borderRadius: '8px',
           backgroundPosition: 'center',
           backgroundSize: 'cover',
           backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url(${slides[currentIndex].url})`,
@@ -83,7 +85,7 @@ function ImageSlider({slides}) {
     
         const descriptionStyles = {
           position: 'absolute',
-          bottom: '45%',
+          bottom: '50%',
           left: 0,
           right: 0,
           marginLeft: 'auto',
@@ -96,7 +98,7 @@ function ImageSlider({slides}) {
 
         const buttonStyles = {
           position: 'absolute',
-          bottom: '22%',
+          bottom: '35%',
           left: 0,
           right: 0,
           marginLeft: 'auto',
@@ -132,8 +134,21 @@ function ImageSlider({slides}) {
     const goToSlide = slideIndex =>{
       setCurrentIndex(slideIndex)
     }
+
+    useEffect(() => {
+      // Auto slide every 3 seconds
+      const interval = setInterval(goToNext, 10000);
+  
+      return () => {
+        clearInterval(interval);
+      };
+    }, [currentIndex]);
+
+    
+  
+    
   return (
-    <div style={sliderStyles}>
+    <div className={`slide-animation ${currentIndex === 0 ? 'slide-animation-initial' : ''}`} style={sliderStyles}>
       <div style={leftArrowStyles} onClick={goToPrevious}><AiFillLeftCircle /></div>
       <div style={rightArrowStyles} onClick={goToNext}><AiFillRightCircle /></div>
       {slides && slides.length > 0 &&

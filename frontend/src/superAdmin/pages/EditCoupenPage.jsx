@@ -9,9 +9,7 @@ function EditCoupenPage() {
   return (
     <div className='bg-opacity-70' style={{ backgroundImage: `url(${image})`, backgroundSize: 'cover' , backdropFilter: 'opacity(0.5)' }}>
       <SuperAdminHeader />
-        <SideBar>
          <EditCoupen />
-        </SideBar>
        <SuperAdminFooter />
     </div>
   )

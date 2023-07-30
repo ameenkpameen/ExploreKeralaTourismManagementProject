@@ -1,11 +1,8 @@
 import React, { useEffect, useState } from 'react'
-
 import {BiDetail} from "react-icons/bi"
-import {BsTrashFill} from "react-icons/bs"
 import {GiConfirmed} from "react-icons/gi"
 import Modal from './Modal'
-import axios from 'axios'
-import baseURL from '../../config'
+import { superAdminGetPropNotifications, superAdminListItem } from '../../api/SuperadminAPI'
 
 
 function ProperNotifications() {
@@ -26,7 +23,7 @@ function ProperNotifications() {
 
    useEffect(()=>{
     async function getNotifications(){
-        const {data} = await axios.get(`${baseURL}/superadmin/getpropertiesnotifications`)
+        const {data} = await superAdminGetPropNotifications()
         if(data){
             setPropData({ ...data, cabsData: data.cabsData });
             setPropData({ ...data, homestayData: data.homestayData });
@@ -44,30 +41,25 @@ function ProperNotifications() {
        console.log(modalData);
        setOpen(false)
        const id = modalData._id
-       const {data} = await axios.post(`${baseURL}/superadmin/listitem/${id}`)
+       const {data} = await superAdminListItem(id)
             if(data){
-                console.log("edited");
                 setOpenSuccess(true)
             }
        
    })
 
-   
-   
-
-   
- 
 
   return (
     <>
-       
+    <div className='flex justify-center'>
+     <div className='container lg:px-40 min-h-screen mt-32'>
         <div className='grid grid-cols-1 lg:grid-cols-3 lg:gap-3 justify-items-center mt-5 mb-5 rounded-sm'>
         {
             
          propData.cabsData?.map((menu, index)=>(
           <div className='my-10 bg-white bg-opacity-70 text-white rounded-sm p-2'>
             <div className='rounded overflow-hidden shadow-lg max-w-sm'>
-                <img className='w-full h-60 p-5' src={menu?.images[0].url} alt="property Image" />
+                <img className='w-full h-60 p-5' src={menu?.images[0].url} alt="property" />
                 <div className='px-6 py-4'>
                     <div className='flex items-center justify-between mb-2'>
                        <div className='font-bold text-2xl text-black'>
@@ -77,12 +69,12 @@ function ProperNotifications() {
                             <div className="mx-auto">
                                 <BiDetail size={20} className="mx-auto" />
                             </div>
-                            <div className='font-extralight text-sm font-semibold'>
+                            <div className='text-sm font-semibold'>
                                 show all details
                             </div>
                        </div>
                     </div>
-                    <div className='font-semibold text-black text-sm text-xl mb-2'>
+                    <div className='font-semibold text-black text-sm mb-2'>
                     {menu?.destination},{menu?.district}
                     </div>
                     <div className='font-normal text-xl mb-2'>
@@ -152,10 +144,10 @@ function ProperNotifications() {
                             Uploaded On:{' '}
                             <span className="text-black font-semibold">{menu?.createdAt.slice(0, 10)}</span>
                             </div>
-                            <div onClick={()=>{setOwner(!owner)}} className="font-normal text-sm text-blue-500 underline text-center text-xl mb-2 hover:cursor-pointer">
+                            <div onClick={()=>{setOwner(!owner)}} className="font-normal text-sm text-blue-500 underline text-center mb-2 hover:cursor-pointer">
                                  See Owner details{' '}
                             </div>
-                            <div onClick={()=>{setDocument(!document)}} className="font-normal text-sm text-blue-500 underline text-center text-xl mb-2 hover:cursor-pointer">
+                            <div onClick={()=>{setDocument(!document)}} className="font-normal text-sm text-blue-500 underline text-center mb-2 hover:cursor-pointer">
                                  See Document{' '}
                             </div>
                         </div>
@@ -177,7 +169,7 @@ function ProperNotifications() {
                             )}
 
                         {document && (
-                            <img className='w-full h-60 p-5' src={menu?.document.url} alt="Document image" />
+                            <img className='w-full h-60 p-5' src={menu?.document.url} alt="Document" />
                         )}
 
 
@@ -201,7 +193,7 @@ function ProperNotifications() {
             propData.homestayData?.map((menu, index)=>(
              <div className='my-10 bg-white bg-opacity-70 text-white rounded-sm p-2'>
                <div className='rounded overflow-hidden shadow-lg max-w-sm'>
-                   <img className='w-full h-60 p-5' src={menu?.images[0].url} alt="property Image" />
+                   <img className='w-full h-60 p-5' src={menu?.images[0].url} alt="property" />
                    <div className='px-6 py-4'>
                        <div className='flex items-center justify-between mb-2'>
                           <div className='font-bold text-2xl text-black'>
@@ -211,12 +203,12 @@ function ProperNotifications() {
                                <div className="mx-auto">
                                    <BiDetail size={20} className="mx-auto" />
                                </div>
-                               <div className='font-extralight text-sm font-semibold'>
+                               <div className='font-extralight text-sm'>
                                    show all details
                                </div>
                           </div>
                        </div>
-                       <div className='font-semibold text-black text-sm text-xl mb-2'>
+                       <div className='font-semibold text-black text-sm mb-2'>
                        {menu?.destination},{menu?.district}
                        </div>
                        <div className='font-normal text-xl mb-2'>
@@ -286,10 +278,10 @@ function ProperNotifications() {
                                Uploaded On:{' '}
                                <span className="text-black font-semibold">{menu?.createdAt.slice(0, 10)}</span>
                                </div>
-                               <div onClick={()=>{setOwner(!owner)}} className="font-normal text-sm text-blue-500 underline text-center text-xl mb-2 hover:cursor-pointer">
+                               <div onClick={()=>{setOwner(!owner)}} className="font-normal text-sm text-blue-500 underline text-center mb-2 hover:cursor-pointer">
                                     See Owner details{' '}
                                </div>
-                               <div onClick={()=>{setDocument(!document)}} className="font-normal text-sm text-blue-500 underline text-center text-xl mb-2 hover:cursor-pointer">
+                               <div onClick={()=>{setDocument(!document)}} className="font-normal text-sm text-blue-500 underline text-center mb-2 hover:cursor-pointer">
                                     See Document{' '}
                                </div>
                            </div>
@@ -311,7 +303,7 @@ function ProperNotifications() {
                                )}
    
                            {document && (
-                               <img className='w-full h-60 p-5' src={menu?.document.url} alt="Document image" />
+                               <img className='w-full h-60 p-5' src={menu?.document.url} alt="Document" />
                            )}
    
    
@@ -344,12 +336,12 @@ function ProperNotifications() {
                                <div className="mx-auto">
                                    <BiDetail size={20} className="mx-auto" />
                                </div>
-                               <div className='font-extralight text-sm font-semibold'>
+                               <div className='font-extralight text-sm'>
                                    show all details
                                </div>
                           </div>
                        </div>
-                       <div className='font-semibold text-black text-sm text-xl mb-2'>
+                       <div className='font-semibold text-black text-sm mb-2'>
                        {menu?.destination},{menu?.district}
                        </div>
                        <div className='font-normal text-xl mb-2'>
@@ -419,10 +411,10 @@ function ProperNotifications() {
                                Uploaded On:{' '}
                                <span className="text-black font-semibold">{menu?.createdAt.slice(0, 10)}</span>
                                </div>
-                               <div onClick={()=>{setOwner(!owner)}} className="font-normal text-sm text-blue-500 underline text-center text-xl mb-2 hover:cursor-pointer">
+                               <div onClick={()=>{setOwner(!owner)}} className="font-normal text-sm text-blue-500 underline text-center mb-2 hover:cursor-pointer">
                                     See Owner details{' '}
                                </div>
-                               <div onClick={()=>{setDocument(!document)}} className="font-normal text-sm text-blue-500 underline text-center text-xl mb-2 hover:cursor-pointer">
+                               <div onClick={()=>{setDocument(!document)}} className="font-normal text-sm text-blue-500 underline text-center mb-2 hover:cursor-pointer">
                                     See Document{' '}
                                </div>
                            </div>
@@ -444,7 +436,7 @@ function ProperNotifications() {
                                )}
    
                            {document && (
-                               <img className='w-full h-60 p-5' src={menu?.document.url} alt="Document image" />
+                               <img className='w-full h-60 p-5' src={menu?.document.url} alt="Document" />
                            )}
    
    
@@ -467,14 +459,14 @@ function ProperNotifications() {
         <Modal open={open} onClose={()=>setOpen(false)}>
             <div className='text-center w-56'>
 
-               <GiConfirmed size={56} className='mx-auto text-green-600'></GiConfirmed>
+               <GiConfirmed size={50} className='mx-auto text-green-600'></GiConfirmed>
                 <div className='mx-auto my-4 w-48'>
-                     <h3 className='text-lg font-black text-gray-800 '>Confirm Approve</h3>
-                     <p className='text-sm text-gray-500'>Are you sure to list this item?</p>
+                     <h3 className='text-lg font-semibold text-gray-800 '>Confirm Approve</h3>
+                     <p className='text-sm text-gray-500 font-normal'>Are you sure to list this item?</p>
                 </div>
                 <div className="flex gap-4">
-                    <button onClick={()=>setOpen(false)} className="btn bg-white text-black shadow-lg hover:bg-gray-100 p-2 rounded-lg w-full">Cancel</button>
-                    <button onClick={handleListSubmit} className="btn bg-red-500 hover:bg-red-600 text-white p-2 rounded-lg w-full">Approve</button>
+                    <button onClick={()=>setOpen(false)} className="btn bg-white text-black shadow-lg hover:bg-gray-100 p-2 rounded-lg w-full text-base font-semibold">Cancel</button>
+                    <button onClick={handleListSubmit} className="btn bg-red-500 hover:bg-red-600 text-white p-2 rounded-lg w-full text-base font-semibold">Approve</button>
                 </div>
             </div>
         </Modal>
@@ -492,7 +484,8 @@ function ProperNotifications() {
                 </div>
             </div>
         </Modal>
-      
+        </div>
+        </div>
     </>
   )
 }

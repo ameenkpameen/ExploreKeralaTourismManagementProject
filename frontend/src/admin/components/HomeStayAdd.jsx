@@ -1,14 +1,13 @@
-import axios from 'axios'
 import React, { useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { addHomeStay, addHotel } from '../../actions/adminActions';
-import baseURL from '../../config';
 import {IoMdCloseCircle} from "react-icons/io"
-import { button } from '@material-tailwind/react';
 import {BsFillCheckCircleFill} from 'react-icons/bs'
 import SuccessModal from './SuccessModal';
 import {GiConfirmed} from "react-icons/gi"
 import { useNavigate } from 'react-router-dom';
+import { uploadCloudinary } from '../../api/OwnerAPI';
+import OwnerTokenExpire from './OwnerTokenExpire';
 
 function HomeStayAdd(props) {
 
@@ -41,13 +40,17 @@ function HomeStayAdd(props) {
   const [errorImg, setErrorImg] = useState('')
   const propertytype = props.property
   const [open, setOpen] = useState(true)
+  const [errorCatch, setErrorCatch] = useState('')
 
 
-  const addData = useSelector(state => state.ownerAddHomeStay) 
-  const {loading,error,homestayAddInfo} = addData
+//   const addData = useSelector(state => state.ownerAddHomeStay) 
+//   const {loading,error,homestayAddInfo} = addData
 
   const addhotelData = useSelector(state => state.ownerAddHotel)
   const {hotelAddInfo} = addhotelData
+
+  const addhmestayData = useSelector(state => state.ownerAddHomeStay)
+  const {homestayAddInfo} = addhmestayData
 
   
 
@@ -66,10 +69,7 @@ function HomeStayAdd(props) {
                 formData.append("file", document);
                 formData.append("upload_preset", "exploreKerala");
             
-                const response = await axios.post(
-                    "https://api.cloudinary.com/v1_1/dp7ydtvg8/image/upload",
-                    formData
-                );
+                const response = await uploadCloudinary(formData)
                 const responseData = response.data;
                 // console.log(responseData.url);
                 // console.log(responseData.public_id);
@@ -85,7 +85,13 @@ function HomeStayAdd(props) {
             }
 
         } catch (error) {
-          console.error("Image upload failed:", error);
+            console.error("Image upload failed:", error);
+            if(error?.response?.data?.message === 'jwt expired'){
+                localStorage.removeItem('ownerInfo')
+                setErrorCatch(error.response.data.message)
+            }else{
+                console.log(error);
+            }
         }
     };
     const docData = await uploadDocument(document)
@@ -113,10 +119,7 @@ function HomeStayAdd(props) {
                         formData.append("file", image);
                         formData.append("upload_preset", "exploreKerala");
                     
-                        return axios.post(
-                            "https://api.cloudinary.com/v1_1/dp7ydtvg8/image/upload",
-                            formData
-                        );
+                        return uploadCloudinary(formData)
                     });
                 
                     try {
@@ -143,6 +146,12 @@ function HomeStayAdd(props) {
                     
                     } catch (error) {
                         console.error("Image upload failed:", error);
+                        if(error?.response?.data?.message === 'jwt expired'){
+                            localStorage.removeItem('ownerInfo')
+                            setErrorCatch(error.response.data.message)
+                        }else{
+                            console.log(error);
+                        }
                     }
                 }
         };
@@ -154,15 +163,13 @@ function HomeStayAdd(props) {
 
    
 
-   const submitingHomestays = async (e)=>{
+    const submitingHomestays = async (e)=>{
       e.preventDefault()
       if( propertyname!== '' && destination!== '' &&district!== '' &&address!== '' &&type!== '' &&capacity!== '' &&baseprice!== '' &&description!== '' &&netprice!== '' &&document!== '' &&images!== ''){
         const admin_id = ownerInfo._id
         
+        
         if(images.length>=3 && document !== null) {
-            console.log("herere");
-            console.log(newImages);
-            console.log(newDocument);
             dispatch(addHomeStay(admin_id,propertyname, destination, district,address, type, capacity, baseprice,netprice,newImages, newDocument,propertytype,description));
         }
       }
@@ -174,9 +181,6 @@ function HomeStayAdd(props) {
       const admin_id = ownerInfo._id
       
       if(images.length>=3 && document !== null) {
-          console.log("herere");
-          console.log(newImages);
-          console.log(newDocument);
           dispatch(addHotel(admin_id,propertyname, destination, district,address, type, capacity, baseprice,netprice,newImages, newDocument,propertytype,description,numberOfRooms));
       }
     }
@@ -197,7 +201,7 @@ function HomeStayAdd(props) {
 
 
   return (
-    <div className='-my-2 overflow-x-auto sm:-mx-6 lg:-mx-8 '>
+    <div className='-my-2 min-w-full overflow-x-auto sm:-mx-6 lg:-mx-8 '>
         {props.add &&
             <section class="sm:w-3/4 md:w-96 mx-auto bg-[#20354b] text-center text-red-500 rounded-2xl px-8 py-6 shadow-lg"> 
                       <div className='flex justify-end'>
@@ -553,7 +557,8 @@ function HomeStayAdd(props) {
             
          }
 
-                          {homestayAddInfo !== undefined || hotelAddInfo !== undefined && open && <SuccessModal open={open} onClose={()=>setOpen(false)}>
+                          {homestayAddInfo !== undefined || hotelAddInfo !== undefined && open && 
+                          <SuccessModal open={open} onClose={()=>setOpen(false)}>
                                 <div className='text-center w-56'>
                     
                                     <GiConfirmed size={56} className='mx-auto text-green-600'></GiConfirmed>
@@ -566,7 +571,11 @@ function HomeStayAdd(props) {
                                     </div>
                                 </div>
                             </SuccessModal>}
+                            {errorCatch !== '' &&
+                                <OwnerTokenExpire message={errorCatch}/>
+                            }
         </div>
+        
   )
 }
 

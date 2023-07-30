@@ -5,14 +5,16 @@ const Destination = require('../models/destinationModel')
 const Hotel = require('../models/hotelModel')
 const Cab = require('../models/cabsModel')
 const HomeStay = require('../models/homestayModel')
-const userGenerateToken = require('../utils/generateToken')
+const {userGenerateToken} = require('../utils/generateToken')
 const Order = require('../models/ordersModel')
 const Banner = require('../models/bannerModal')
 const Coupen = require('../models/coupenModel')
+const Owner = require('../models/ownerModel')
 require("dotenv").config()
 const stripe = require('stripe')(process.env.STRPE_SECRET_TEST)
 
 const registerUser = asyncHandler(async (req,res)=>{
+    console.log(req.body);
     const {firstname, lastname, phonenumber, email, password} = req.body
     
     const userExists = await User.findOne({ email })
@@ -40,6 +42,7 @@ const registerUser = asyncHandler(async (req,res)=>{
             email: user.email,
             token:userGenerateToken(user._id),
             isAdmin:user.isAdmin,
+            status:user.status,
             isSuperAdmin: user.isSuperAdmin
         })
     }else{
@@ -57,6 +60,7 @@ const loginUser = asyncHandler(async (req,res)=>{
     const user = await User.findOne({ email })
      
     if(user && (await user.matchPassword(password))){
+        const token = userGenerateToken(user._id)
         res.json({
             _id:user._id,
             firstname: user.firstname,
@@ -64,7 +68,8 @@ const loginUser = asyncHandler(async (req,res)=>{
             phonenumber: user.phonenumber,
             email: user.email,
             wallet: user.wallet,
-            token:userGenerateToken(user._id),
+            status:user.status,
+            token:token,
             isAdmin:user.isAdmin,
             isSuperAdmin: user.isSuperAdmin
         })
@@ -79,11 +84,19 @@ const loginUser = asyncHandler(async (req,res)=>{
 
 const getProfile = async(req,res)=>{
     const id = req.params.id
+    console.log(id);
     const user = await User.findOne({ _id:id })
     if(user){
-        res.json({
-            user:user
-        })
+        if(user.status === 'inActive'){
+            res.json({
+                user:user,
+                blocked:true
+            })
+        }else{
+            res.json({
+                user:user
+            })
+        }
     }else{
         res.status(400)
         throw new Error('Occured an error !')
@@ -115,8 +128,8 @@ const editProfile = async(req,res)=>{
 
 
 const getDestinations = async(req, res) =>{
+    console.log(req.body);
     try{
-
         const destinationdata = await Destination.find({status:'active'})
         if(destinationdata){
             res.status(201).json({
@@ -130,6 +143,67 @@ const getDestinations = async(req, res) =>{
         console.log(error);
     }
 }
+
+const getDestinationDatas = async(req, res) =>{
+    const pageNumber = req.params.pagenumber
+    const limit = req.params.dataperpage
+    try{
+        const countOfDestination = await Destination.countDocuments({status:'active'})
+        const numberOfPages = Math.ceil(countOfDestination/limit)
+        const skippable = (pageNumber -1) * limit
+        const destinationdata = await Destination.find({status:'active'}).skip(skippable).limit(limit)
+        if(destinationdata){
+            res.status(201).json({
+                destinationdata,
+                numberOfPages
+            })
+        }else{
+            res.status(400)
+            throw new Error('Error occured! Please try again')
+        }
+    }catch(error){
+        console.log(error);
+    }
+}
+
+
+const getDestinationNames = async(req, res) =>{
+    try{
+        const nameArray =[]
+        const destinationdata = await Destination.find({status:'active'})
+        if(destinationdata){
+            destinationdata.map((element)=>{
+                nameArray.push(element.destination)
+            })
+            res.status(201).json({
+                nameArray: nameArray
+            })
+        }else{
+            res.status(400)
+            throw new Error('Error occured! Please try again')
+        }
+    }catch(error){
+        console.log(error);
+    }
+}
+
+const getOwnersData = async(req, res) =>{
+    const id = req.params.id
+    try{
+        const ownerData = await Owner.findOne({_id:id})
+        if(ownerData){
+            res.status(201).json({
+                ownerData
+            })
+        }else{
+            res.status(400)
+            throw new Error('Error occured! Please try again')
+        }
+    }catch(error){
+        console.log(error);
+    }
+}
+
 
 const getBanners = async(req, res) =>{
     try{
@@ -231,7 +305,7 @@ const paymentHandle = async(req,res)=>{
 
 
 const saveOrder = async(req,res)=>{
-    const data = req.body.orderData;
+    const data = req.body;
      try {
         const newFromDate = new Date(data.fromdate)
         const newToDate = new Date(data.todate)
@@ -247,48 +321,46 @@ const saveOrder = async(req,res)=>{
             toDate: newToDate,
             numberofdays: data.numberofdays,
             discount:data.discount,
-            amountpaid: data.amountpayable,
-            paymentmethod: data.paymentMethod,
-            amounttobepaid: data.amountBalance
+            amountpaid: 0,
+            amounttobepaid: data.amountBalance+data.amountpayable
         })
 
-        if(saveData){
-            while (newFromDate < newToDate) {
-                dates.push(new Date(newFromDate));
-                newFromDate.setDate(newFromDate.getDate() + 1);
-              }
-            if(data.propertytype === 'Cab'){
-                var dateUpdated = await Cab.findOneAndUpdate(
-                  { _id: data.propertyId },
-                  { $push: { ordered: { $each: dates } } },
-                  { new: true }
-                )
-            }else if(data.propertytype === 'HomeStay'){
-                dateUpdated = await HomeStay.findOneAndUpdate(
-                    { _id: data.propertyId },
-                    { $push: { ordered: { $each: dates } } },
-                    { new: true }
-                  )
-            }else if(data.propertytype === 'Hotel'){
-                dateUpdated = await Hotel.findOneAndUpdate(
-                    { _id: data.propertyId },
-                    { $push: { ordered: { $each: dates } } },
-                    { new: true }
-                )
-            }
+        // if(saveData){
+        //     while (newFromDate < newToDate) {
+        //         dates.push(new Date(newFromDate));
+        //         newFromDate.setDate(newFromDate.getDate() + 1);
+        //       }
+        //     if(data.propertytype === 'Cab'){
+        //         var dateUpdated = await Cab.findOneAndUpdate(
+        //           { _id: data.propertyId },
+        //           { $push: { ordered: { $each: dates } } },
+        //           { new: true }
+        //         )
+        //     }else if(data.propertytype === 'HomeStay'){
+        //         dateUpdated = await HomeStay.findOneAndUpdate(
+        //             { _id: data.propertyId },
+        //             { $push: { ordered: { $each: dates } } },
+        //             { new: true }
+        //           )
+        //     }else if(data.propertytype === 'Hotel'){
+        //         dateUpdated = await Hotel.findOneAndUpdate(
+        //             { _id: data.propertyId },
+        //             { $push: { ordered: { $each: dates } } },
+        //             { new: true }
+        //         )
+        //     }
 
-            if(saveData && data.paymentMethod === 'wallet'){
-                const walletResult = await User.findOneAndUpdate({_id:data.costomerId},
-                    { $inc: { wallet: -data.amountpayable } },{new:true}
-                    )
-            }
+        //     if(saveData && data.paymentMethod === 'wallet'){
+        //         const walletResult = await User.findOneAndUpdate({_id:data.costomerId},
+        //             { $inc: { wallet: -data.amountpayable } },{new:true}
+        //             )
+        //     }
 
-            if(dateUpdated){
+            if(saveData){
                 res.status(201).json({
                     data:saveData
                 })
-            }
-        }else{
+            }else{
             res.status(400)
             throw new Error('Error occured! Please try again')
         }
@@ -426,10 +498,10 @@ const coupenSave = async(req,res)=>{
                 }else{
                     lastDiscount = price * coupen.percentage/100
                 }
-                const updateCoupen = await Coupen.findOneAndUpdate({coupencode:code},{
-                    $push:{usersused:costomer}
-                })
-                if(updateCoupen){
+                // const updateCoupen = await Coupen.findOneAndUpdate({coupencode:code},{
+                //     $push:{usersused:costomer}
+                // })
+                if(lastDiscount){
                     res.status(201).json({
                         success:true,
                         discount:lastDiscount
@@ -474,6 +546,136 @@ const getDestinationPropertiesData = async(req,res)=>{
 }
 
 
+const walletOrderChange = async(req,res)=>{
+    const newFromDate = new Date(req.body.fromDate)
+    const newToDate = new Date(req.body.toDate)
+    const dates = [];
+    const tobepaid = (req.body.amountPayable - req.body.discount)
+    try {
+        const orderChange = await Order.findOneAndUpdate({_id:req.body.orderId},
+            {
+                $set:{
+                    paymentmethod:'wallet',
+                    status:'confirmed',
+                    amountpaid:req.body.amountPayable,
+                    amounttobepaid:tobepaid,
+                    discount:req.body.discount
+                }
+            },{new:true})
+    
+            if(orderChange){
+                if(req.body.coupenCode !== '' && req.body.discount > 0){
+                    const updateCoupen = await Coupen.findOneAndUpdate({coupencode:req.body.coupenCode},{
+                            $push:{usersused:req.body.costomerId}
+                    })
+                }
+            }
+    
+            if(orderChange ){
+                        while (newFromDate < newToDate) {
+                            dates.push(new Date(newFromDate));
+                            newFromDate.setDate(newFromDate.getDate() + 1);
+                        }
+                        if(req.body.type === 'Cab'){
+                            var dateUpdated = await Cab.findOneAndUpdate(
+                              { _id: req.body.property },
+                              { $push: { ordered: { $each: dates } } },
+                              { new: true }
+                            )
+                        }else if(req.body.type === 'HomeStay'){
+                            dateUpdated = await HomeStay.findOneAndUpdate(
+                                { _id: req.body.property },
+                                { $push: { ordered: { $each: dates } } },
+                                { new: true }
+                              )
+                        }else if(req.body.type === 'Hotel'){
+                            dateUpdated = await Hotel.findOneAndUpdate(
+                                { _id: req.body.property },
+                                { $push: { ordered: { $each: dates } } },
+                                { new: true }
+                            )
+                        }
+                    if(orderChange){
+                        const walletResult = await User.findOneAndUpdate({_id:req.body.costomerId},
+                                        { $inc: { wallet: -req.body.amountPayable } },{new:true}
+                                        )
+                        if(walletResult){
+                            res.status(201).json({
+                                data:orderChange,
+                                success:true
+                            })
+                        }
+                    }
+            }
+    } catch (error) {
+        console.log(error);
+    }
+    
+}
+
+const stripeOrderChange = async(req,res)=>{
+    const newFromDate = new Date(req.body.orderData.fromDate)
+    const newToDate = new Date(req.body.orderData.toDate)
+    const dates = [];
+    const tobepaid = ((req.body.orderData.amounttobepaid)/2 - req.body.discount)
+    console.log(req.body);
+    try {
+        const amountPaid = req.body.orderData.amounttobepaid/2
+        const orderChange = await Order.findOneAndUpdate({_id:req.body.orderData._id},
+            {
+                $set:{
+                    paymentmethod:'stripe',
+                    status:'confirmed',
+                    amountpaid:amountPaid,
+                    amounttobepaid:tobepaid,
+                    discount:req.body.discount
+                }
+            },{new:true})
+
+            if(orderChange){
+                if(req.body.coupenCode !== '' && req.body.discount > 0){
+                    const updateCoupen = await Coupen.findOneAndUpdate({coupencode:req.body.coupenCode},{
+                            $push:{usersused:req.body.orderData.costomer}
+                    })
+                }
+            }
+            if(orderChange ){
+                while (newFromDate < newToDate) {
+                    dates.push(new Date(newFromDate));
+                    newFromDate.setDate(newFromDate.getDate() + 1);
+                }
+                if(req.body.orderData.type === 'Cab'){
+                    var dateUpdated = await Cab.findOneAndUpdate(
+                      { _id: req.body.orderData.property._id },
+                      { $push: { ordered: { $each: dates } } },
+                      { new: true }
+                    )
+                }else if(req.body.orderData.type === 'HomeStay'){
+                    dateUpdated = await HomeStay.findOneAndUpdate(
+                        { _id: req.body.orderData.property._id },
+                        { $push: { ordered: { $each: dates } } },
+                        { new: true }
+                      )
+                }else if(req.body.orderData.type === 'Hotel'){
+                    dateUpdated = await Hotel.findOneAndUpdate(
+                        { _id: req.body.orderData.property._id },
+                        { $push: { ordered: { $each: dates } } },
+                        { new: true }
+                    )
+                }
+            if(orderChange){
+                    res.status(201).json({
+                        data:orderChange,
+                        success:true
+                    })
+            }
+         }
+    } catch (error) {
+        console.log(error);
+    }
+}
+
+
 
 module.exports = { registerUser,
                    loginUser,
@@ -489,6 +691,11 @@ module.exports = { registerUser,
                    cancelOrder,
                    getOrderDetails,
                    getCoupens,
-                   coupenSave
+                   coupenSave,
+                   walletOrderChange,
+                   stripeOrderChange,
+                   getDestinationNames,
+                   getDestinationDatas,
+                   getOwnersData
 
                  }

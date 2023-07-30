@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from 'react'
 import { useDispatch,useSelector } from 'react-redux';
-import axios from "axios";
 import {BsFillCheckCircleFill} from 'react-icons/bs'
 import {GiConfirmed} from "react-icons/gi"
 import {BiErrorAlt} from 'react-icons/bi'
 import { useNavigate } from 'react-router-dom';
 import OwnerModal from './OwnerModal';
 import { OwnerAddBanner } from '../../actions/adminActions';
-import baseURL from '../../config';
+import { getOwnerProperties, uploadCloudinary } from '../../api/OwnerAPI';
+import OwnerTokenExpire from './OwnerTokenExpire';
 
 function AddBannerForm() {
 
@@ -28,6 +28,7 @@ function AddBannerForm() {
     const [errorImg, setErrorImg] = useState('')
     const [activeSubmit, setActiveSubmit] = useState(false)
     const [open, setOpen] =useState(false)
+    const [errorCatch, setErrorCatch] = useState('')
 
     if(localStorage.ownerInfo !== undefined){
         var owner = JSON.parse(localStorage.ownerInfo);
@@ -38,11 +39,20 @@ function AddBannerForm() {
 
     useEffect(()=>{
         async function getProperties(){
-            const {data} = await axios.get(`${baseURL}/owner/getmyproperties/${id}`)
-            var dataArray = []
-            if(data){
-                dataArray = data.cabsdata.concat(data.homestaydata, data.hoteldata);
-                setProductData(dataArray)
+            try {
+                const {data} = await getOwnerProperties(id)
+                var dataArray = []
+                if(data){
+                    dataArray = data.cabsdata.concat(data.homestaydata, data.hoteldata);
+                    setProductData(dataArray)
+                }
+            } catch (error) {
+                if(error?.response?.data?.message === 'jwt expired'){
+                    localStorage.removeItem('ownerInfo')
+                    setErrorCatch(error.response.data.message)
+                }else{
+                    console.log(error);
+                }
             }
         }
         getProperties()
@@ -66,10 +76,7 @@ function AddBannerForm() {
               formData.append("file", image);
               formData.append("upload_preset", "exploreKerala");
   
-              const response = await axios.post(
-                "https://api.cloudinary.com/v1_1/dp7ydtvg8/image/upload",
-                formData
-              );
+              const response = await uploadCloudinary(formData)
           
               const responseData = response.data;
               setImage_url(responseData.url);
@@ -81,7 +88,12 @@ function AddBannerForm() {
               setErrorImg('')
               setActiveSubmit(true)
             } catch (error) {
-              console.log(error);
+                if(error?.response?.data?.message === 'jwt expired'){
+                    localStorage.removeItem('ownerInfo')
+                    setErrorCatch(error.response.data.message)
+                }else{
+                    console.log(error);
+                }
             }
           }
         
@@ -100,7 +112,9 @@ function AddBannerForm() {
 
   return (
     <div>
-           <div className="container mx-auto py-8">
+        <div className='flex justify-center'>
+          <div className='container min-h-screen mt-32 px-3 '>
+           <div className="container py-8 px-5">
                 <h1 className="text-2xl text-gray-800 font-bold mb-6 text-center">Add New Banner</h1>
                 
                 <form onSubmit={submitHandler} className="w-full max-w-sm mx-auto text-white bg-[#20354b] p-8 rounded-lg shadow-xl drop-shadow-2xl" encType="multipart/form-data">
@@ -224,6 +238,11 @@ function AddBannerForm() {
                         }
                   </div>
               </OwnerModal>
+        </div>
+        </div>
+        {errorCatch !== '' &&
+            <OwnerTokenExpire message={errorCatch}/>
+        }
         </div>
   )
 }

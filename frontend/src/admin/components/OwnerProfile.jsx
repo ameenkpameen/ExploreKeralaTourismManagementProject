@@ -1,6 +1,4 @@
 import React, { useEffect, useState } from 'react'
-import baseURL from "../../config";
-import axios from "axios";
 
 import {AiTwotoneEdit} from "react-icons/ai"
 import {IoMdCloseCircle} from "react-icons/io"
@@ -9,12 +7,15 @@ import { useSelector } from 'react-redux';
 import OwnerError from './OwnerError';
 import OwnerLoading from './OwnerLoading';
 
+import { getOwnerProfile } from '../../api/OwnerAPI'
+import OwnerTokenExpire from './OwnerTokenExpire';
+
 
 function OwnerProfile() {
 
     const [profileData, setprofileData] = useState('')
     const [edit,setEdit] = useState(false)
-    const [edited,setEdited] = useState(false)
+    const [errorCatch, setErrorCatch] = useState('')
     // const adminsLogin = useSelector(state => state.adminLogin)
     // const { loading,error, adminInfo } = adminsLogin
 
@@ -30,21 +31,29 @@ function OwnerProfile() {
     const id = owner._id
 
     useEffect(()=>{
-        async function getAdminInfo(){
-            const {data} = await axios.get(`${baseURL}/owner/getprofile/${id}`)
-            if(data){
-                setprofileData(data.owner)
+        try {
+            async function getAdminInfo(){
+                const {data} = await getOwnerProfile(id)
+                if(data){
+                    setprofileData(data.owner)
+                }
+            }
+            getAdminInfo() 
+        } catch (error) {
+            if(error?.response?.data?.message === 'jwt expired'){
+                localStorage.removeItem('ownerInfo')
+                setErrorCatch(error.response.data.message)
+            }else{
+                console.log(error);
             }
         }
-        getAdminInfo() 
     },[edit])
-
-    console.log(profileData);
-
    
     
   return (
-    <div className='-my-2 overflow-x-auto sm:-mx-6 lg:-mx-8 py-20'>
+    <div className='flex justify-center'>
+     <div className='container min-h-screen mt-32'>
+    <div className='-my-2 overflow-x-auto sm:-mx-6 lg:-mx-8 py-20 px-5'>
                  
                 {owner.status === 'inActive' ?
                    <h1 className=' text-red-600 bg-white p-5 rounded-lg'>You Are Blocked by Admin</h1> :
@@ -61,18 +70,18 @@ function OwnerProfile() {
                     {!edit &&
                    <div>
                     <div class="mt-6 w-fit mx-auto">
-                        <img src={profileData.image} class="rounded-full w-28 " alt="profile picture" srcset="" />
+                        <img src={profileData.image} class="rounded-full w-28 " alt="profile" srcset="" />
                     </div>
 
                     <div class="h-1 w-full bg-black mt-8 rounded-full">
                         <div class="h-1 rounded-full w-full bg-yellow-500 "></div>
                     </div>
                 
-                    <div class="mt-8 ">
+                    <div class="mt-5 ">
                         <h2 class="text-white font-bold text-2xl tracking-wide">{profileData.firstname} <br/> {profileData.lastname}</h2>
                     </div>
 
-                    <div class="h-1 w-full bg-black mt-8 rounded-full">
+                    <div class="h-1 w-full bg-black mt-5 rounded-full">
                         <div class="h-1 rounded-full w-full bg-yellow-500 "></div>
                     </div>
 
@@ -105,6 +114,11 @@ function OwnerProfile() {
 
 
             
+    </div>
+    </div>
+    {errorCatch !== '' &&
+      <OwnerTokenExpire message={errorCatch}/>
+    }
     </div>
   )
 }

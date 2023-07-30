@@ -1,8 +1,8 @@
-import axios from "axios";
-import baseURL from "../config";
+
 import { ADMIN_ADDCABS_FAIL, ADMIN_ADDCABS_REQUEST, ADMIN_ADDCABS_SUCCESS, ADMIN_ADDHOMESTAY_FAIL, ADMIN_ADDHOMESTAY_REQUEST, ADMIN_ADDHOMESTAY_SUCCESS, ADMIN_ADDHOTEL_FAIL, ADMIN_ADDHOTEL_REQUEST, ADMIN_ADDHOTEL_SUCCESS, ADMIN_EDITPROFILE_FAIL, ADMIN_EDITPROFILE_REQUEST, ADMIN_EDITPROFILE_SUCCESS, ADMIN_LOGIN_FAIL, ADMIN_LOGIN_REQUEST, ADMIN_LOGIN_SUCCESS, ADMIN_LOGOUT, ADMIN_REGISTER_FAIL, ADMIN_REGISTER_REQUEST, ADMIN_REGISTER_SUCCESS, OWNER_ADDBANNER_FAIL, OWNER_ADDBANNER_REQUEST, OWNER_ADDBANNER_SUCCESS, OWNER_ADDCABS_FAIL, OWNER_ADDCABS_REQUEST, OWNER_ADDCABS_SUCCESS, OWNER_ADDHOMESTAY_FAIL, OWNER_ADDHOMESTAY_REQUEST, OWNER_ADDHOMESTAY_SUCCESS, OWNER_ADDHOTEL_FAIL, OWNER_ADDHOTEL_REQUEST, OWNER_ADDHOTEL_SUCCESS, OWNER_EDITPROFILE_FAIL, OWNER_EDITPROFILE_REQUEST, OWNER_EDITPROFILE_SUCCESS, OWNER_LOGIN_FAIL, OWNER_LOGIN_REQUEST, OWNER_LOGIN_SUCCESS, OWNER_LOGOUT, OWNER_REGISTER_FAIL, OWNER_REGISTER_REQUEST, OWNER_REGISTER_SUCCESS } from "../constants/adminConstants";
 import { useNavigate } from "react-router-dom";
 import { Navigate } from "react-router-dom"
+import { editOwnerProfileData, ownerAddBanner, ownerAddCab, ownerAddHomeStay, ownerAddHotel, ownerLogins, ownerRegisters } from "../api/OwnerAPI";
 
 
 
@@ -16,19 +16,7 @@ export const ownerRegister = (firstname,lastname,phonenumber,email,password) => 
                 "Content-type": "application/json"
             },
         }
-
-        
-
-          const { data } = await axios.post(`${baseURL}/owner/signup`,
-            {
-                firstname,
-                lastname,
-                phonenumber,
-                email,
-                password,
-            },
-            config
-          )
+          const { data } = await ownerRegisters(firstname,lastname,phonenumber,email,password,config)
 
           dispatch({type: OWNER_REGISTER_SUCCESS, payload:data})
         //   dispatch({type: ADMIN_LOGIN_SUCCESS, payload:data})
@@ -56,14 +44,7 @@ export const ownerLogin = (email,password) => async(dispatch) =>{
         }
         
         
-        const { data } = await axios.post(`${baseURL}/owner/login`,
-         {
-            email,
-            password,
-         },
-         config
-        );
-        console.log(data);
+        const { data } = await ownerLogins(email,password,config)
         dispatch({type: OWNER_LOGIN_SUCCESS, payload: data})
         
         localStorage.setItem('ownerInfo',JSON.stringify(data))
@@ -95,17 +76,7 @@ export const ownerLogin = (email,password) => async(dispatch) =>{
                 "Content-type":"application/json"
             }
         }
-        const { data } = await axios.put(`${baseURL}/owner/editownerprofile/${id}`,
-            {
-                firstname,
-                lastname,
-                phonenumber,
-                email,
-                image_url,
-                public_id
-            },
-            config
-          )
+        const { data } = await editOwnerProfileData(id,firstname, lastname,phonenumber, email, image_url, public_id,config) 
           if(data){
             dispatch({type: OWNER_EDITPROFILE_SUCCESS, payload: data});
           }
@@ -122,36 +93,20 @@ export const ownerLogin = (email,password) => async(dispatch) =>{
 
   export const addHomeStay = (admin_id,propertyname, destination, district,address, type, capacity, baseprice,netprice,newImages, newDocument,propertytype,description)=> async (dispatch) =>{
     try{
+      
       dispatch({type: OWNER_ADDHOMESTAY_REQUEST})
       const config = {
           headers: {
               "Content-type":"application/json"
           }
       }
-      const { data } = await axios.post(`${baseURL}/owner/addhomestay`,
-          {
-            admin_id,
-            propertyname,
-            destination,
-            district,
-            address,
-            type,
-            capacity,
-            baseprice,
-            netprice,
-            newImages,
-            newDocument,
-            propertytype,
-            description
-          },
-          config
-        )
+      const { data } = await ownerAddHomeStay(admin_id,propertyname, destination, district,address, type, capacity, baseprice,netprice,newImages, newDocument,propertytype,description,config)
         if(data){
           dispatch({type: OWNER_ADDHOMESTAY_SUCCESS, payload: data})
         }
         
     }catch(error){
-      dispatch({type: OWNER_ADDHOMESTAY_FAIL})
+        dispatch({type: OWNER_ADDHOMESTAY_FAIL})
        console.log(error);
 
     }
@@ -167,25 +122,7 @@ export const addHotel = (admin_id,propertyname, destination, district,address, t
             "Content-type":"application/json"
         }
     }
-    const { data } = await axios.post(`${baseURL}/owner/addhotel`,
-        {
-          admin_id,
-          propertyname,
-          destination,
-          district,
-          address,
-          type,
-          capacity,
-          baseprice,
-          netprice,
-          newImages,
-          newDocument,
-          propertytype,
-          description,
-          numberOfRooms
-        },
-        config
-      )
+    const { data } = await ownerAddHotel(admin_id,propertyname, destination, district,address, type, capacity, baseprice,netprice,newImages, newDocument,propertytype,description,numberOfRooms,config)
       if(data){
         dispatch({type: OWNER_ADDHOTEL_SUCCESS, payload: data})
       }
@@ -209,23 +146,7 @@ export const addCabs = (admin_id,registerNumber,brandname,modelname,destination,
             "Content-type":"application/json"
         }
     }
-    const  {data}  = await axios.post(`${baseURL}/owner/addcabs`,
-        {
-          admin_id,
-          registerNumber,
-          brandname,
-          modelname,
-          destination,
-          district,
-          seatingCapacity,
-          fuelType,
-          minCharge,
-          extraFair,
-          newImages,
-          newDocument
-        },
-        config
-      )
+    const  {data}  = await ownerAddCab(admin_id,registerNumber,brandname,modelname,destination,district,seatingCapacity,fuelType,minCharge,extraFair,newDocument,newImages,config)
       
       dispatch({type: OWNER_ADDCABS_SUCCESS,payload: data});
       
@@ -259,10 +180,7 @@ export const OwnerAddBanner = (heading,description,image_url,public_id,productId
               },
               withCredentials:true,
           }
-          const { data } = await axios.post(`${baseURL}/owner/addbanner`,
-              formData,
-              config
-          )
+          const { data } = await ownerAddBanner(formData,config)
           if(data){
               
               dispatch({type: OWNER_ADDBANNER_SUCCESS, payload:data})

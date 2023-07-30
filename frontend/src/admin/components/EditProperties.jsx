@@ -1,15 +1,14 @@
-import axios from 'axios'
 import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom';
-
 import {IoMdCloseCircle} from "react-icons/io"
-import baseURL from '../../config'
 import { Link, useParams } from 'react-router-dom'
 import {AiTwotoneDelete} from 'react-icons/ai'
 import OwnerModal from './OwnerModal'
 import {GiConfirmed} from "react-icons/gi"
 import {BsFillCheckCircleFill} from 'react-icons/bs'
 import SuccessModal from './SuccessModal';
+import { deleteCabImage, deleteHomestayImage, deleteHotelImage, getCabDetails, getHomeStayDetails, getHotelDetails, ownerEditCab, ownerEditHomestay, ownerEditHotel, ownerGetDestinations, uploadCloudinary } from '../../api/OwnerAPI';
+import OwnerTokenExpire from './OwnerTokenExpire';
 
 function EditProperties({open,data, onClose}) {
     const navigate = useNavigate();
@@ -26,6 +25,7 @@ function EditProperties({open,data, onClose}) {
     const [uploading, setUploading] = useState(false)
     const [uploaded, setUploaded] = useState(false)
     const [image, setImage] = useState('')
+    const [errorCatch, setErrorCatch] = useState('')
 
     const [errImage,setErrImage] = useState('')
 
@@ -39,22 +39,31 @@ function EditProperties({open,data, onClose}) {
 
   useEffect(()=>{ 
     async function fetchData(){
-          if(name === 'Cabs'){
-            const {data} = await axios.get(`${baseURL}/owner/getcabdetails/${id}`)
-            if(data){
-             setCabData(data.cabsdata[0])
+        try {
+            if(name === 'Cabs'){
+              const {data} = await getCabDetails(id)
+              if(data){
+               setCabData(data.cabsdata[0])
+              }
+            }else if(name === 'HomeStays'){
+              const {data} = await getHomeStayDetails(id)
+              if(data){
+               setHomestayData(data.homestaydata[0])
+              }
+            }else{
+              const {data} = await getHotelDetails(id)
+              if(data){
+               setHotelData(data.hoteldata[0])
+              }
             }
-          }else if(name === 'HomeStays'){
-            const {data} = await axios.get(`${baseURL}/owner/gethomestaydetails/${id}`)
-            if(data){
-             setHomestayData(data.homestaydata[0])
+        } catch (error) {
+            if(error?.response?.data?.message === 'jwt expired'){
+                localStorage.removeItem('ownerInfo')
+                setErrorCatch(error.response.data.message)
+            }else{
+                console.log(error);
             }
-          }else{
-            const {data} = await axios.get(`${baseURL}/owner/gethoteldetails/${id}`)
-            if(data){
-             setHotelData(data.hoteldata[0])
-            }
-          }
+        }
             
     }
     fetchData()
@@ -92,20 +101,11 @@ function EditProperties({open,data, onClose}) {
     const property_id = prop_id
     try {
         if(type === "Cab"){
-            var data = await axios.post(`${baseURL}/owner/deletecabimage`,{
-                public_id:pub_id,
-                id:property_id
-            })
+            var data = await deleteCabImage(pub_id,property_id)
         }else if(type === 'HomeStay'){
-             data = await axios.post(`${baseURL}/owner/deletehomestayimage`,{
-                public_id:pub_id,
-                id:property_id
-            })
+              data = await deleteHomestayImage(pub_id,property_id)
         }else{
-            data = await axios.post(`${baseURL}/owner/deletehotelimage`,{
-                public_id:pub_id,
-                id:property_id
-            })
+              data = await deleteHotelImage(pub_id,property_id)
         }
 
         if(data.data.success){
@@ -115,7 +115,12 @@ function EditProperties({open,data, onClose}) {
         
         console.log(data.data.success);
       } catch (error) {
-        console.log("Error:", error.message);
+            if(error?.response?.data?.message === 'jwt expired'){
+                localStorage.removeItem('ownerInfo')
+                setErrorCatch(error.response.data.message)
+            }else{
+                console.log(error);
+            }
       }
  }
 
@@ -134,10 +139,7 @@ function EditProperties({open,data, onClose}) {
             formData.append("file", image);
             formData.append("upload_preset", "exploreKerala");
         
-            const response = await axios.post(
-                "https://api.cloudinary.com/v1_1/dp7ydtvg8/image/upload",
-                formData
-            );
+            const response = await uploadCloudinary(formData)
             const responseData = response.data;
             console.log(responseData.url);
             console.log(responseData.public_id);
@@ -162,7 +164,13 @@ function EditProperties({open,data, onClose}) {
             // return setNewDocument({documentData})
 
         } catch (error) {
-          console.error("Image upload failed:", error);
+            console.error("Image upload failed:", error);
+            if(error?.response?.data?.message === 'jwt expired'){
+                localStorage.removeItem('ownerInfo')
+                setErrorCatch(error.response.data.message)
+                }else{
+                    console.log(error);
+                }
         }
       }
     };
@@ -188,15 +196,18 @@ useEffect(() => {
         if(cabData.images.length < 3){
             setImageError("Oops...Three Images required")
         }else{
-            const {data} = await axios.post(`${baseURL}/owner/editcabdata`,{
-                cabData
-            })
+            const {data} = await ownerEditCab(cabData)
             if(data){
                 setEditModalOpen(true)
             }
         }
     } catch (error) {
-        console.log(error);
+        if(error?.response?.data?.message === 'jwt expired'){
+            localStorage.removeItem('ownerInfo')
+            setErrorCatch(error.response.data.message)
+        }else{
+            console.log(error);
+        }
     }
  }
 
@@ -206,15 +217,18 @@ useEffect(() => {
         if(homestayData.images.length < 3){
             setImageError("Oops...Three Images required")
         }else{
-            const {data} = await axios.post(`${baseURL}/owner/edithomestaydata`,{
-                homestayData
-            })
+            const {data} = await ownerEditHomestay(homestayData)
             if(data){
                 setEditModalOpen(true)
             }
         }
     } catch (error) {
-        console.log(error);
+        if(error?.response?.data?.message === 'jwt expired'){
+            localStorage.removeItem('ownerInfo')
+            setErrorCatch(error.response.data.message)
+        }else{
+            console.log(error);
+        }
     }
  }
 
@@ -224,15 +238,18 @@ useEffect(() => {
         if(hotelData.images.length < 3){
             setImageError("Oops...Three Images required")
         }else{
-            const {data} = await axios.post(`${baseURL}/owner/edithoteldata`,{
-                hotelData
-            })
+            const {data} = await ownerEditHotel(hotelData)
             if(data){
                 setEditModalOpen(true)
             }
         }
     } catch (error) {
-        console.log(error);
+        if(error?.response?.data?.message === 'jwt expired'){
+            localStorage.removeItem('ownerInfo')
+            setErrorCatch(error.response.data.message)
+        }else{
+            console.log(error);
+        }
     }
     
  }
@@ -240,13 +257,22 @@ useEffect(() => {
 
  useEffect(()=>{
     async function getDestinations(){
-        const {data} = await axios.get(`${baseURL}/owner/getdestinations`)
-        if(data){
-            const destinationArray = []
-            data.destinationdata.forEach((e)=>{
-                destinationArray.push(e.destination)
-            })
-            setDestinations(destinationArray)
+        try {
+            const {data} = await ownerGetDestinations
+            if(data){
+                const destinationArray = []
+                data.destinationdata.forEach((e)=>{
+                    destinationArray.push(e.destination)
+                })
+                setDestinations(destinationArray)
+            }
+        } catch (error) {
+            if(error?.response?.data?.message === 'jwt expired'){
+                localStorage.removeItem('ownerInfo')
+                setErrorCatch(error.response.data.message)
+            }else{
+                console.log(error);
+            }
         }
     }
     getDestinations()
@@ -261,7 +287,9 @@ useEffect(() => {
 
   return (
     <>
-       <div className={`mt-10 mb-10 flex justify-center items-center transition-colors -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8 `}>
+      <div className='flex justify-center'>
+     <div className='container min-h-screen mt-32'>
+       <div className={`mt-10 mb-10 flex justify-center items-center transition-colors -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8 px-3`}>
            { name === "Cabs" && 
             <section class="sm:w-3/4 md:w-96 mx-auto bg-[#20354b] text-center text-red-500 rounded-2xl px-8 py-6 shadow-lg"> 
                       <div className='flex justify-end'>
@@ -1066,7 +1094,11 @@ useEffect(() => {
          </SuccessModal>
       
 
-
+         </div>
+         </div>
+         {errorCatch !== '' &&
+            <OwnerTokenExpire message={errorCatch}/>
+            }
         </>
   )
 }

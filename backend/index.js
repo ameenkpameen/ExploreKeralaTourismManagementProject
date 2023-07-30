@@ -28,7 +28,7 @@ dotenv.config();
 connectDB();
 
 app.use(cors({
-    origin: 'http://localhost:3000',
+    origin: 'https://superb-babka-f3fe81.netlify.app/',
     credentials : true
 }))
 

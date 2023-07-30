@@ -2,10 +2,6 @@ const Chat  = require('../models/chatModel')
 
 const createChat = async (req , res ) => {
     console.log(req.body);
-      // const {senderId , receiverId} = req.body
-    //   const {senderId} = req.body
-    //   const ownerData = await Owner.find({})
-    //   const receiverId = ownerData[0]._id.toString()
     try {
       const findChat = await Chat.findOne(
             {

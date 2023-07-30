@@ -14,9 +14,6 @@ const configureSocket = (server) => {
       })
 
       io.on("connection", (socket) => {
-
-            //add new user
-            //taking new user Id from client side
             socket.on('add-new-user', (newUserId) => {
                   if (!activeUsers.some((user) => user.userId === newUserId)) {
                         activeUsers.push(

@@ -8,7 +8,7 @@ function OrderConfirmation(props) {
     <div class=" md:px-6 2xl:px-10 2xl:container 2xl:mx-auto">
           
             <div class="flex justify-start item-start space-y-2 flex-col">
-              <h1 class="text-3xl  lg:text-4xl font-semibold leading-7 lg:leading-9 text-gray-800">Congratulations....Your Order Placed</h1>
+              <h1 class="text-3xl  lg:text-4xl font-semibold leading-7 lg:leading-9 text-gray-50">Congratulations....Your Order Placed</h1>
               <p class="text-base dark:text-gray-300 font-medium leading-6 text-gray-7  00">10th July 2023 at 10:34 PM</p>
             </div>
             <div class="mt-10 flex flex-col xl:flex-row jusitfy-center items-stretch w-full xl:space-x-8 space-y-4 md:space-y-6 xl:space-y-0">
@@ -48,7 +48,11 @@ function OrderConfirmation(props) {
                       </div>
                       <div class="flex justify-between items-center w-full">
                         <p class="text-base dark:text-white leading-4 text-gray-800">Amount Paid </p>
-                        <p class="text-base dark:text-gray-300 leading-4 text-gray-600">{orderData.amountpayable}(50%)</p>
+                        <p class="text-base dark:text-gray-300 leading-4 text-gray-600">0</p>
+                      </div>
+                      <div class="flex justify-between items-center w-full">
+                        <p class="text-base dark:text-white leading-4 text-gray-800">Amount Payable in Advance </p>
+                        <p class="text-base dark:text-gray-300 leading-4 text-gray-600">₹{orderData.amountpayable}</p>
                       </div>
                       
                     </div>

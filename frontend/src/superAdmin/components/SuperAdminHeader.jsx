@@ -69,167 +69,222 @@ function SuperAdminHeader() {
     navigate('/superadmin/login')
   }
 
-//   useEffect(()=> {
-//     if(superadminInfo){
-//         navigate('/superadmin')
-//     }
-//   },[superadminInfo])
+
+
+const [navIsShown, setnavIsShown] = useState(false);
+  const toggleNavIsShown = () => {
+    setnavIsShown((navIsShown) => !navIsShown);
+  };
+
+  const listItemStyle = {
+    borderBottom: '2px solid #666', // border-b-2 border-b-gray-600
+    position: 'relative', // To position the dropdown content
+    display: 'inline-block', // So it takes the width of the content
+  };
+  
+  const dropdownContentStyle = {
+    display: 'none', // Initially hide the dropdown content
+    position: 'absolute',
+    backgroundColor: '#ffffff',
+    minWidth: '160px',
+    boxShadow: '0px 8px 16px 0px rgba(0,0,0,0.2)',
+    zIndex: 1,
+  };
+  
+  const listItemLinkStyle = {
+    textDecoration: 'none',
+    display: 'block',
+    padding: '5px 10px',
+  };
 
   
 
 
-// useEffect(()=>{
-//     async function getNotifications(){
-//         const {data} = await axios.get(`${baseURL}/superadmin/getpropertiesnotifications`)
-//         if(data){
-//             setCabdata(data.cabsData)
-//             setHomestaydata(data.homestayData)
-//             setHoteldata(data.hotelData)
-//             const notcount = cabdata.length+homestaydata.length+hoteldata.length
-//             setCount(notcount)
-//         }
-        
-        
-//     }
-//     getNotifications()
-// },[])
+  const handleMouseEnter = () => {
+    document.getElementById('myDropdown').style.display = 'block';
+  };
 
-// useEffect(()=>{
-//     async function getNotifications(){
-//         const adminsdata = await axios.get(`${baseURL}/superadmin/getalladmins`)
-//         const {data} = await axios.get(`${baseURL}/superadmin/getallusers`)
-//         if(data ){
-//             console.log(data);
-//             setUserdata(data)
-//             console.log(userData);
-//         }
-
-//         if(adminsdata){
-//             setAdmindata(adminsdata.data.adminsdata)
-//         }
-//     }
-//     getNotifications()
-// },[])
+  const handleMouseLeave = () => {
+    document.getElementById('myDropdown').style.display = 'none';
+  };
 
   return (
     <div>
        
-        <nav className="w-full bg-black shadow fixed  inset-x-0 z-50">
-            
-            <div className="justify-between px-4 mx-auto lg:max-w-7xl md:items-center md:flex md:px-8">
-                <div>
-                    <div className="flex items-center justify-between py-3 md:py-5 md:block">
-                        <div className='flex items-center justify-between'>
-                            {superadminInfo &&
-                                <div className=' flex justify-end text-gray-50'>
-                                    <HiMenuAlt3 size={26} className='cursor-pointer' onClick={()=>setOpen(!open)}/>
-                                </div> 
-                            }
-                            <h3 className="rounded-lg w-48 font-LobsterTwo text-3xl text-center text-white">
-                                <span className='font-Squada font-bold text-red-400'>E</span>xplore<span className='font-Squada font-bold text-red-400'>K</span>erala
-                            </h3>
-                        </div>
-                        <div className="md:hidden">
-                            <button
-                                className="p-2 text-gray-700 rounded-md outline-none focus:border-gray-400 focus:border"
-                                onClick={() => setNavbar(!navbar)}
-                            >
-                                {navbar ? (
-                                    <svg
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        className="w-6 h-6 text-white"
-                                        viewBox="0 0 20 20"
-                                        fill="currentColor"
-                                    >
-                                        <path
-                                            fillRule="evenodd"
-                                            d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                                            clipRule="evenodd"
-                                        />
-                                    </svg>
-                                ) : (
-                                    <svg
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        className="w-6 h-6 text-white"
-                                        fill="none"
-                                        viewBox="0 0 24 24"
-                                        stroke="currentColor"
-                                        strokeWidth={2}
-                                    >
-                                        <path
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                            d="M4 6h16M4 12h16M4 18h16"
-                                        />
-                                    </svg>
-                                )}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-                <div>
-                    <div
-                        className={`flex-1 justify-self-center pb-3 mt-8 md:block md:pb-0 md:mt-0 ${
-                            navbar ? "block" : "hidden"
-                        }`}
+        
+        <nav className='flex justify-between items-center h-20 px-4 absolute top-0 left-0 z-10 w-full text-white bg-[#1e1b4b]'>
+                <h3 className="rounded-lg w-48 font-LobsterTwo text-3xl text-center text-white">
+                    <span className='font-Squada font-bold text-red-400'>E</span>xplore<span className='font-Squada font-bold text-red-400'>K</span>erala
+                </h3>
+            <ul className='hidden md:flex gap-6'>
+                <li>
+                  <Link to='/superadmin'>Dashboard</Link>
+                </li>
+                <li>
+                <Link to='/superadmin/notifications'>New Properties</Link>
+                </li>
+                <li>
+                <Link to='/superadmin/listDestinations'>Destinations</Link>
+                </li>
+                <li
+                    style={listItemStyle}
+                    onMouseEnter={handleMouseEnter}
+                    onMouseLeave={handleMouseLeave}
                     >
-                        <ul className="items-center justify-center space-y-8 md:flex md:space-x-6 md:space-y-0">
-                            <li className="text-white hover:text-indigo-200">
-                                <h1 className='font-bold'>Super Admin Panel</h1>
+                    <span>Other options</span>
+                    <div id="myDropdown" className='rounded-md' style={dropdownContentStyle}>
+                        <Link to='/superadmin/listusers' className='text-black font-medium hover:bg-blue-950 hover:text-white' style={listItemLinkStyle}>Users List</Link>
+                        <Link to='/superadmin/listOwners' className='text-black font-medium hover:bg-blue-950 hover:text-white' style={listItemLinkStyle}>Owners List</Link>
+                        <Link to='/superadmin/viewbanners' className='text-black font-medium hover:bg-blue-950 hover:text-white' style={listItemLinkStyle}>Banners List</Link>
+                        <Link to='/superadmin/listcoupens' className='text-black font-medium hover:bg-blue-950 hover:text-white' style={listItemLinkStyle}>Coupens List</Link>
+                        <Link to='/superadmin/addcoupens' className='text-black font-medium hover:bg-blue-950 hover:text-white' style={listItemLinkStyle}>Add Coupens</Link>
+                        <Link to='/superadmin/adddestinations' className='text-black font-medium hover:bg-blue-950 hover:text-white' style={listItemLinkStyle}>Add Destination</Link>
+                        {/* Add more links for additional dropdown options if needed */}
+                    </div>
+                    </li>
+            </ul>
+                 <div className='hidden md:flex'>
+                
+                
+                <div>
+                {!superadmin && 
+                     
+                           <Link
+                        to="/superadmin/login"
+                        className="flex flex-row gap-2 w-full px-4 py-2 text-center text-white "
+                        >
+                        <svg
+                            xmlns='http://www.w3.org/2000/svg'
+                            fill='none'
+                            viewBox='0 0 24 24'
+                            strokeWidth={1.5}
+                            stroke='currentColor'
+                            className='w-6 h-6'
+                            >
+                            <path
+                                strokeLinecap='round'
+                                strokeLinejoin='round'
+                                d='M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z'
+                            />
+                            </svg>
+                        <p>Sign in</p>
+                        </Link>
+                     
+                       }
+                {superadmin && 
+                        <div className='flex flex-row'>
+                        <Link
+                            
+                            className="flex flex-row gap-2 w-full px-4 py-2 text-center text-white "
+                        >
+                            <svg
+                            xmlns='http://www.w3.org/2000/svg'
+                            fill='none'
+                            viewBox='0 0 24 24'
+                            strokeWidth={1.5}
+                            stroke='currentColor'
+                            className='w-6 h-6'
+                            >
+                            <path
+                                strokeLinecap='round'
+                                strokeLinejoin='round'
+                                d='M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z'
+                            />
+                            </svg>
+                            <p>Profile</p>
+                        </Link>
+                        <Link
+                            onClick={logoutHandler}
+                            className="flex flex-row gap-2 w-full px-4 py-2 text-center text-white"
+                        >
+                            Logout
+                        </Link>
+                        </div>
+                        }
+                </div>
+                    
+                        
+                
+            </div>
+            {!navIsShown && (
+                <svg
+                xmlns='http://www.w3.org/2000/svg'
+                fill='none'
+                viewBox='0 0 24 24'
+                strokeWidth={1.5}
+                stroke='currentColor'
+                className='w-6 h-6 md:hidden'
+                onClick={toggleNavIsShown}
+                >
+                <path
+                    strokeLinecap='round'
+                    strokeLinejoin='round'
+                    d='M3.75 6.75h16.5M3.75 12h16.5M12 17.25h8.25'
+                />
+                </svg>
+            )}
+            {navIsShown && (
+                <div className='md:hidden absolute z-10 top-0 left-0 w-full bg-gray-100/90 text-black px-4 pt-6 '>
+                    <div className='flex justify-between'>
+                        <h3 className="rounded-lg w-48 font-LobsterTwo text-3xl text-center text-gray-950">
+                            <span className='font-Squada font-bold text-red-400'>E</span>xplore<span className='font-Squada font-bold text-red-400'>K</span>erala
+                        </h3>
+                        <svg
+                            xmlns='http://www.w3.org/2000/svg'
+                            fill='none'
+                            viewBox='0 0 24 24'
+                            strokeWidth={1.5}
+                            stroke='currentColor'
+                            className='w-6 h-6'
+                            onClick={toggleNavIsShown}
+                            >
+                            <path
+                                strokeLinecap='round'
+                                strokeLinejoin='round'
+                                d='M6 18L18 6M6 6l12 12'
+                            />
+                        </svg>
+                    </div>
+                        <ul className='mt-5 mb-4'>
+                            <li className='border-b-2 border-b-gray-600'>
+                            <Link to='/superadmin'>Dashboard</Link>
+                            </li>
+                            <li className='border-b-2 border-b-gray-600'>
+                            <Link to='/superadmin/notifications'>New Properties</Link>
+                            </li>
+                            <li className='border-b-2 border-b-gray-600'>
+                            <Link to='/superadmin/listDestinations'>Destinations</Link>
+                            </li>
+                            <li className='border-b-2 border-b-gray-600'>
+                            <Link to='/superadmin/listusers' >Users List</Link>
+                            </li>
+                            <li className='border-b-2 border-b-gray-600'>
+                            <Link to='/superadmin/listOwners' >Owners List</Link>
+                            </li>
+                            <li className='border-b-2 border-b-gray-600'>
+                            <Link to='/superadmin/viewbanners'>Banners List</Link>
+                            </li>
+                            <li className='border-b-2 border-b-gray-600'>
+                            <Link to='/superadmin/listcoupens'>Coupens List</Link>
+                            </li>
+                            <li className='border-b-2 border-b-gray-600'>
+                            <Link to='/superadmin/addcoupens'>Add Coupens</Link>
+                            </li>
+                            <li className='border-b-2 border-b-gray-600'>
+                            <Link to='/superadmin/adddestinations'>Add Destination</Link>
                             </li>
                             
                         </ul>
-                        
-                        
-                        <div className="mt-3 space-y-2 lg:hidden md:inline-block">
-                        {superadmin && <Link
-                            onClick={logoutHandler}
-                            className="inline-block w-full px-4 py-2 text-center text-white bg-gray-600 rounded-md shadow hover:bg-gray-800"
-                        >
-                            Logout
-                        </Link>}
-                        {superadmin && <Link
+                    <button className='w-full mb-1 btn'>Search</button>
+                    {superadmin ?
+                        <>
                             
-                            className="inline-block w-full px-4 py-2 text-center text-gray-800 bg-white rounded-md shadow hover:bg-gray-100"
-                        >
-                            PROFILE
-                        </Link>}
-
-                        {!superadmin && <Link
-                            to="/superadmin/login"
-                            className="inline-block w-full px-4 py-2 text-center text-gray-800 bg-white rounded-md shadow hover:bg-gray-100"
-                            >
-                            Login
-                           </Link>}
+                            <button onClick={()=>logoutHandler} className="w-full mb-4 btn"> Logout </button>
+                        </> :
+                        <button onClick={()=>navigate('/superadmin/login')} className='w-full mb-0 btn'>Login</button>
+                    }
                 </div>
-                    
-                    </div>
-                    
-                </div>
-                <div className="hidden space-x-2 md:inline-block">
-                
-                  { superadmin &&
-                    <Link
-                    onClick={logoutHandler}
-                    className="px-4 py-2 text-white bg-gray-600 rounded-md shadow hover:bg-gray-800"
-                   >
-                    Logout
-                   </Link>
-                  }
-                    
-                    
-                    {!superadmin && <Link
-                        to="/superadmin/login"
-                        className="px-4 py-2 text-white bg-gray-600 rounded-md shadow hover:bg-gray-800"
-                    >
-                        Sign in
-                    </Link>}
-                    
-                </div>
-
-                
-                
-            </div>
+            )}
         </nav>
         
     </div>

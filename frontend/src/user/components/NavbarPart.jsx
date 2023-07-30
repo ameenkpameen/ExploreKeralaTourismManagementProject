@@ -1,174 +1,189 @@
-import React, { useEffect } from 'react'
+import React from 'react'
 import { useState } from "react";
-import { Provider, useDispatch, useSelector } from 'react-redux';
+import {  useDispatch, useSelector } from 'react-redux';
 import { logout } from '../../actions/userActions';
-import { Link, Navigate, useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 
 
-
-
-import {MdAddHomeWork} from "react-icons/md"
-import {RiAdminLine} from "react-icons/ri"
-import {BiMoneyWithdraw} from "react-icons/bi"
-import {BiAddToQueue} from "react-icons/bi"
-
-import {MdOutlinePropaneTank} from "react-icons/md"
-
-import DashBoard from './DashBoard';
-import Profile from './Profile';
-import PlanTrip from './PlanTrip';
-import ListDestinations from './ListDestinations';
-import axios from 'axios';
-import baseURL from '../../config';
-import LoginPage from '../pages/LoginPage';
-import Sidebar from './Sidebar';
 
 function NavbarPart() {
-
-    
-
-  const [navbar, setNavbar] = useState(false)
-  const [open, setOpen] = useState(true);
-  
-  
-
+    const navigate = useNavigate()
   if(localStorage.userInfo !== undefined){
     var user = JSON.parse(localStorage.userInfo);
-    console.log(user.firstname);
   }
-
   const userLogin = useSelector((state)=> state.userLogin)
-  const {loading,error,userInfo} = userLogin
+//   const {loading,error,userInfo} = userLogin
 
-
-  const navigate = useNavigate()
   const dispatch = useDispatch();
   
   const logoutHandler = ()=>{
     localStorage.removeItem("userInfo")
-    // dispatch(logout())
-    navigate('/')
+    dispatch(logout())
   }
 
+  const [navIsShown, setnavIsShown] = useState(false);
+  const toggleNavIsShown = () => {
+    setnavIsShown((navIsShown) => !navIsShown);
+  };
   
 
   return (
     <div>
-      <nav className="w-full bg-black shadow fixed inset-x-0 z-50">
-            <div className="justify-between px-4 mx-auto lg:max-w-7xl md:items-center md:flex md:px-8">
-                  <div>
-                    <div className="flex items-center justify-between py-3 md:py-5 md:block">
-                        <div className='flex items-center justify-between'>
-                                
-                                <h3 className="rounded-lg w-48 font-LobsterTwo text-3xl text-center text-white">
-                                    <span className='font-Squada font-bold text-red-400'>E</span>xplore<span className='font-Squada font-bold text-red-400'>K</span>erala
-                                </h3>
-                        </div>
-                        <div className="md:hidden">
-                            <button
-                                className="p-2 text-gray-700 rounded-md outline-none focus:border-gray-400 focus:border"
-                                onClick={() => setNavbar(!navbar)}
-                            >
-                                {navbar ? (
-                                    <svg
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        className="w-6 h-6 text-white"
-                                        viewBox="0 0 20 20"
-                                        fill="currentColor"
-                                    >
-                                        <path
-                                            fillRule="evenodd"
-                                            d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                                            clipRule="evenodd"
-                                        />
-                                    </svg>
-                                ) : (
-                                    <svg
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        className="w-6 h-6 text-white"
-                                        fill="none"
-                                        viewBox="0 0 24 24"
-                                        stroke="currentColor"
-                                        strokeWidth={2}
-                                    >
-                                        <path
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                            d="M4 6h16M4 12h16M4 18h16"
-                                        />
-                                    </svg>
-                                )}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-                <div>
-                    <div
-                        className={`flex-1 justify-self-center pb-3 mt-8 md:block md:pb-0 md:mt-0 ${
-                            navbar ? "block" : "hidden"
-                        }`}
-                    >
-                        <ul className="items-center justify-center space-y-8 md:flex md:space-x-6 md:space-y-0">
-                            <li className="text-white hover:text-indigo-200">
-                                <a href="/">Home</a>
-                            </li>
-                            <li className="text-white hover:text-indigo-200">
-                                <a href="/">Blog</a>
-                            </li>
-                            <li className="text-white hover:text-indigo-200">
-                                <a href="/">About US</a>
-                            </li>
-                            <li className="text-white hover:text-indigo-200">
-                                <a href="/">Contact US</a>
-                            </li>
-                        </ul>
+      
 
-                        <div className="mt-3 space-y-2 lg:hidden md:inline-block">
-                        {!user && <Link
-                            to="/login"
-                            className="inline-block w-full px-4 py-2 text-center text-white bg-gray-600 rounded-md shadow hover:bg-gray-800"
+        <nav className='flex justify-between items-center h-20 px-4 absolute top-0 left-0 z-10 w-full text-white bg-[#131136]'>
+                <h3 className="rounded-lg w-48 font-LobsterTwo text-3xl text-center text-white">
+                    <span className='font-Squada font-bold text-red-400'>E</span>xplore<span className='font-Squada font-bold text-red-400'>K</span>erala
+                </h3>
+            <ul className='hidden md:flex gap-6'>
+                <li>
+                <Link to='/'>Home</Link>
+                </li>
+                <li>
+                <Link to='/listdestinations'>Destinations</Link>
+                </li>
+                <li>
+                <Link to='/plantrip' href=''>Plan Travel</Link>
+                </li>
+                <li>
+                <Link to='/myorders'>Orders</Link>
+                </li>
+                <li>
+                <Link to='/mywallet'>Wallet</Link>
+                </li>
+                <li>
+                <Link to='/chatpage'>Chat</Link>
+                </li>
+            </ul>
+                 <div className='hidden md:flex'>
+                
+                
+                <div>
+                {!user && 
+                     
+                           <Link
+                        to="/login"
+                        className="flex flex-row gap-2 w-full px-4 py-2 text-center text-white "
                         >
-                            Sign in
-                        </Link>}
-                        {user && <Link
-                            
-                            className="inline-block w-full px-4 py-2 text-center text-gray-800 bg-white rounded-md shadow hover:bg-gray-100"
+                        <svg
+                            xmlns='http://www.w3.org/2000/svg'
+                            fill='none'
+                            viewBox='0 0 24 24'
+                            strokeWidth={1.5}
+                            stroke='currentColor'
+                            className='w-6 h-6'
+                            >
+                            <path
+                                strokeLinecap='round'
+                                strokeLinejoin='round'
+                                d='M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z'
+                            />
+                            </svg>
+                        <p>Sign in</p>
+                        </Link>
+                     
+                       }
+                {user && 
+                        <div className='flex flex-row'>
+                        <Link
+                            to="/myprofile"
+                            className="flex flex-row gap-2 w-full px-4 py-2 text-center text-white "
                         >
-                            {user.firstname +" "+ user.lastname}
-                        </Link>}
-                        {user && <Link
+                            <svg
+                            xmlns='http://www.w3.org/2000/svg'
+                            fill='none'
+                            viewBox='0 0 24 24'
+                            strokeWidth={1.5}
+                            stroke='currentColor'
+                            className='w-6 h-6'
+                            >
+                            <path
+                                strokeLinecap='round'
+                                strokeLinejoin='round'
+                                d='M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z'
+                            />
+                            </svg>
+                            <p>Profile</p>
+                        </Link>
+                        <Link
                             onClick={logoutHandler}
-                            className="inline-block w-full px-4 py-2 text-center text-gray-800 bg-white rounded-md shadow hover:bg-gray-100"
+                            className="flex flex-row gap-2 w-full px-4 py-2 text-center text-white"
                         >
                             Logout
-                        </Link>}
+                        </Link>
+                        </div>
+                        }
                 </div>
-                    </div>
-                </div>
-                <div className="hidden space-x-2 md:inline-block">
-                
-                {user && <Link
-                        className="px-4 py-2 text-white bg-gray-600 rounded-md shadow hover:bg-gray-800"
-                        >
-                        {user.firstname +" "+ user.lastname}
-                </Link>}
-
-                {user && <Link
-                        onClick={logoutHandler}
-                        className="px-4 py-2 text-white bg-gray-600 rounded-md shadow hover:bg-gray-800"
-                    >
-                        Logout
-                    </Link>}
                     
-                    {! user && <Link
-                        to="/login"
-                        className="px-4 py-2 text-white bg-gray-600 rounded-md shadow hover:bg-gray-800"
-                    >
-                        Sign in
-                    </Link>
-                    }
-                </div>
+                        
+                
             </div>
+            {!navIsShown && (
+                <svg
+                xmlns='http://www.w3.org/2000/svg'
+                fill='none'
+                viewBox='0 0 24 24'
+                strokeWidth={1.5}
+                stroke='currentColor'
+                className='w-6 h-6 md:hidden'
+                onClick={toggleNavIsShown}
+                >
+                <path
+                    strokeLinecap='round'
+                    strokeLinejoin='round'
+                    d='M3.75 6.75h16.5M3.75 12h16.5M12 17.25h8.25'
+                />
+                </svg>
+            )}
+            {navIsShown && (
+                <div className='md:hidden absolute z-10 top-0 left-0 w-full bg-gray-100/90 text-black px-4 py-6'>
+                <div className='flex justify-between'>
+                <h3 className="rounded-lg w-48 font-LobsterTwo text-3xl text-center text-gray-950">
+                    <span className='font-Squada font-bold text-red-400'>E</span>xplore<span className='font-Squada font-bold text-red-400'>K</span>erala
+                </h3>
+                    <svg
+                    xmlns='http://www.w3.org/2000/svg'
+                    fill='none'
+                    viewBox='0 0 24 24'
+                    strokeWidth={1.5}
+                    stroke='currentColor'
+                    className='w-6 h-6'
+                    onClick={toggleNavIsShown}
+                    >
+                    <path
+                        strokeLinecap='round'
+                        strokeLinejoin='round'
+                        d='M6 18L18 6M6 6l12 12'
+                    />
+                    </svg>
+                </div>
+                <ul className='mt-5 mb-4'>
+                    <li className='border-b-2 border-b-gray-600'>
+                    <Link to='/'>Home</Link>
+                    </li>
+                    <li className='border-b-2 border-b-gray-600'>
+                    <Link to='/listdestinations'>Destinations</Link>
+                    </li>
+                    <li className='border-b-2 border-b-gray-600'>
+                    <Link to='/plantrip'>Plan Travel</Link>
+                    </li>
+                    <li className='border-b-2 border-b-gray-600'>
+                    <Link to='/myorders'>Orders</Link>
+                    </li>
+                    <li className='border-b-2 border-b-gray-600'>
+                    <Link to='/mywallet'>Wallet</Link>
+                    </li>
+                </ul>
+                  <button className='w-full mb-4 btn'>Search</button>
+                  {user ?
+                    <>
+                        <button onClick={()=>navigate('/myprofile')} className='w-full mb-4 btn'>My Profile</button> 
+                        <button onClick={()=>logoutHandler} className="w-full mb-4 btn"> Logout </button>
+                    </> :
+                    <button onClick={()=>navigate('/login')} className='w-full mb-4 btn'>Login</button>
+                  }
+                </div>
+            )}
         </nav>
       {/* {user ?
          <Sidebar />

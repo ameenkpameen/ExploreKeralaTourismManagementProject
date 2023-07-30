@@ -1,4 +1,3 @@
-import axios from 'axios'
 import React, { useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { addCabs } from '../../actions/adminActions';
@@ -8,6 +7,8 @@ import {IoMdCloseCircle} from "react-icons/io"
 import {BsFillCheckCircleFill} from 'react-icons/bs'
 import {GiConfirmed} from "react-icons/gi"
 import SuccessModal from './SuccessModal';
+import { uploadCloudinary } from '../../api/OwnerAPI';
+import OwnerTokenExpire from './OwnerTokenExpire';
 
 function CabsAdd(props) {
 
@@ -34,6 +35,7 @@ function CabsAdd(props) {
     const [errorDoc, setErrorDoc] = useState('')
     const [errorImg, setErrorImg] = useState('')
     const [open, setOpen] = useState(true)
+    const [errorCatch, setErrorCatch] = useState('')
 
     
 
@@ -75,10 +77,7 @@ function CabsAdd(props) {
                 formData.append("file", document);
                 formData.append("upload_preset", "exploreKerala");
             
-                const response = await axios.post(
-                    "https://api.cloudinary.com/v1_1/dp7ydtvg8/image/upload",
-                    formData
-                );
+                const response = await uploadCloudinary(formData)
                 const responseData = response.data;
                 console.log(responseData.url);
                 console.log(responseData.public_id);
@@ -94,7 +93,13 @@ function CabsAdd(props) {
                 return setNewDocument({documentData})
 
             } catch (error) {
-              console.error("Image upload failed:", error);
+                console.error("Image upload failed:", error);
+                if(error?.response?.data?.message === 'jwt expired'){
+                    localStorage.removeItem('ownerInfo')
+                    setErrorCatch(error.response.data.message)
+                }else{
+                    console.log(error);
+                }
             }
           }
         };
@@ -115,42 +120,44 @@ function CabsAdd(props) {
                     if (!Array.isArray(imagesArray)) {
                     imagesArray = [imagesArray]; // Convert single image to an array
                     }
-                
-                    const uploadPromises = imagesArray.map((image) => {
-                    const formData = new FormData();
-                    formData.append("file", image);
-                    formData.append("upload_preset", "exploreKerala");
-                
-                    return axios.post(
-                        "https://api.cloudinary.com/v1_1/dp7ydtvg8/image/upload",
-                        formData
-                    );
-                    });
-                
+                    
                     try {
-                    const responses = await Promise.all(uploadPromises);
-                    console.log("Images uploaded successfully:", responses);
-                    const urlArray = []
-                    responses.forEach((element)=>{
-                        if (Object.prototype.hasOwnProperty.call(element.data, 'url') && Object.prototype.hasOwnProperty.call(element.data, 'public_id')) {
-                            const url = element.data.url;
-                            const public_id = element.data.public_id;
-                            console.log(url);
-                            console.log(public_id);
-                            urlArray.push({
-                            url: url,
-                            public_id: public_id
-                            });
-                        }
-                    })
-                    console.log(urlArray);
-                    setImgUploading(false)
-                    setUplodedImg(true)
-                    setErrorImg('')
-                    return setNewImages({urlArray})
+                        const uploadPromises = imagesArray.map((image) => {
+                                const formData = new FormData();
+                                formData.append("file", image);
+                                formData.append("upload_preset", "exploreKerala");
+                            
+                                return uploadCloudinary(formData)
+                        });
+                        const responses = await Promise.all(uploadPromises);
+                        console.log("Images uploaded successfully:", responses);
+                        const urlArray = []
+                        responses.forEach((element)=>{
+                            if (Object.prototype.hasOwnProperty.call(element.data, 'url') && Object.prototype.hasOwnProperty.call(element.data, 'public_id')) {
+                                const url = element.data.url;
+                                const public_id = element.data.public_id;
+                                console.log(url);
+                                console.log(public_id);
+                                urlArray.push({
+                                url: url,
+                                public_id: public_id
+                                });
+                            }
+                        })
+                        console.log(urlArray);
+                        setImgUploading(false)
+                        setUplodedImg(true)
+                        setErrorImg('')
+                        return setNewImages({urlArray})
                     
                     } catch (error) {
-                    console.error("Image upload failed:", error);
+                        console.error("Image upload failed:", error);
+                        if(error?.response?.data?.message === 'jwt expired'){
+                            localStorage.removeItem('ownerInfo')
+                            setErrorCatch(error.response.data.message)
+                        }else{
+                            console.log(error);
+                        }
                     }
                }
         };
@@ -165,8 +172,6 @@ function CabsAdd(props) {
         console.log(brandname,modelname,destination,district,seatingCapacity,fuelType,extraFair,document,images);
         const admin_id = ownerInfo._id
 
-        
-            console.log('hhhhh');
             dispatch(addCabs(admin_id,registerNumber,brandname,modelname,destination,district,seatingCapacity,fuelType,minCharge,extraFair,newDocument,newImages));
         
     }else{
@@ -192,7 +197,7 @@ function CabsAdd(props) {
     <>
     <div className='-my-2 overflow-x-auto sm:-mx-6 lg:-mx-8'>
         {props.add &&
-            <section class="sm:w-3/4 md:w-96 mx-auto bg-[#20354b] text-center text-red-500 rounded-2xl px-8 py-6 shadow-lg"> 
+            <section class="sm:w-full md:w-96 mx-auto bg-[#20354b] text-center text-red-500 rounded-2xl px-8 py-6 shadow-lg"> 
                       <div className='flex justify-end'>
 
                             <span id="dropdownHoverButton" onClick={()=>props.setAdd(!props.add)}  data-dropdown-toggle="dropdownHover" data-dropdown-trigger="hover" className="text-emerald-400  focus:ring-4 focus:outline-none  font-medium rounded-lg text-sm px-4 py-2.5 text-center inline-flex items-end " type="button" >
@@ -501,6 +506,9 @@ function CabsAdd(props) {
                                     </div>
                                 </div>
                             </SuccessModal>}
+                            {errorCatch !== '' &&
+                                <OwnerTokenExpire message={errorCatch}/>
+                            }
         </>
   )
 }

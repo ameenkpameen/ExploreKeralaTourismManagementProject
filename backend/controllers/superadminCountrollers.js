@@ -1,7 +1,7 @@
 const asyncHandler = require('express-async-handler')
 const Superadmin = require('../models/superadminModel')
 const Destination = require('../models/destinationModel')
-const superAdminGenerateToken = require('../utils/generateToken')
+const {superAdminGenerateToken} = require('../utils/generateToken')
 const fs = require('fs')
 const path = require('path')
 const { uploadToCloudinary } = require('../cloudinary')
@@ -15,6 +15,8 @@ const Coupen = require('../models/coupenModel')
 const BASE_URL = 'http://localhost:5000/public/images'
 require('dotenv').config();
 const cloudinary = require('cloudinary').v2;
+const moment = require('moment');
+const Order = require('../models/ordersModel')
 
 
 
@@ -82,8 +84,9 @@ const registersuperAdmin = asyncHandler(async (req,res)=>{
 
 
 const addDestination = asyncHandler(async (req,res)=>{
-
+            console.log(req.body);
             const {destination, district, spots,image_url,public_id} = req.body
+            console.log(destination, district, spots,image_url,public_id);
             const spot= spots.split(',')
             
             
@@ -203,9 +206,7 @@ const editCoupen = asyncHandler(async (req,res)=>{
 
 const getDestinations = asyncHandler(async (req,res)=>{
 
-       
     try{
-
         const destinationdata = await Destination.find({})
         if(destinationdata){
             res.status(201).json({
@@ -262,17 +263,13 @@ const getCoupens = async (req,res)=>{
 
 
 
-const getPropertiesNotifications = asyncHandler(async (req,res)=>{
-
+const getPropertiesNotifications = async (req,res)=>{
        
     try{
         
         const cabsData = await Cab.find({status:false}).populate('propertyholder')
         const hotelData = await Hotel.find({status:false}).populate('propertyholder')
         const homestayData = await HomeStay.find({status:false}).populate('propertyholder')
-        // console.log(cabsData);
-        // console.log(hotelData);
-        // console.log(homestayData);
         if(cabsData){
             res.status(201).json({
                 cabsData:cabsData,
@@ -288,20 +285,26 @@ const getPropertiesNotifications = asyncHandler(async (req,res)=>{
     }
 
 
-})
+}
 
 
 
 
 const getAllUsersList = asyncHandler(async (req,res)=>{
+    const pageNumber = req.params.pagenumber
+    const limit = req.params.dataperpage
 
     try{
         
-        const usersdata = await User.find({})
+        const countUsers = await User.countDocuments({})
+        const numberOfPages = Math.ceil(countUsers/limit)
+        const skippable = (pageNumber -1) * limit
+        const usersdata = await User.find({}).skip(skippable).limit(limit)
         
         if(usersdata){
             res.status(201).json({
-                data:usersdata
+                data:usersdata,
+                numberOfPages
             })
         }else{
             res.status(400)
@@ -316,14 +319,20 @@ const getAllUsersList = asyncHandler(async (req,res)=>{
 
 
 const getAllAdminsList = asyncHandler(async (req,res)=>{
+    const pageNumber = req.params.pagenumber
+    const limit = req.params.dataperpage
 
     try{
         
-        const adminsdata = await Owner.find({})
+        const countOwner = await Owner.countDocuments({})
+        const numberOfPages = Math.ceil(countOwner/limit)
+        const skippable = (pageNumber -1) * limit
+        const adminsdata = await Owner.find({}).skip(skippable).limit(limit)
         
         if(adminsdata){
             res.status(201).json({
-                adminsdata:adminsdata
+                data:adminsdata,
+                numberOfPages
             })
         }else{
             res.status(400)
@@ -343,20 +352,16 @@ const getAllAdminsList = asyncHandler(async (req,res)=>{
 const listItem = asyncHandler(async(req,res)=>{
      try {
         const id = req.params.id
-        console.log("herererer");
         const homestaydata = await HomeStay.findOneAndUpdate({_id:id},{
             $set: {
                 status:true
         }},{new:true})
 
         if(homestaydata){
-            console.log("homestaya");
             res.status(201).json({
                 data:homestaydata
             })
         }else if(!homestaydata){
-            console.log(id);
-            console.log("hoteladaa");
             const hotelData = await Hotel.findOneAndUpdate({_id:id},{
                 $set: {
                     status:true
@@ -367,7 +372,6 @@ const listItem = asyncHandler(async(req,res)=>{
                     data:hotelData
                 })
             }else{
-                console.log("cabdata");
                 const cabData = await Cab.findOneAndUpdate({_id:id},{
                     $set: {
                         status:true
@@ -460,6 +464,44 @@ const unblockCoupen = asyncHandler(async(req,res)=>{
 })
 
 
+const unlistBanner = asyncHandler(async(req,res)=>{
+    try {
+       const id = req.params.id
+       const result = await Banner.findOneAndUpdate({_id:id},{
+           $set: {
+               status:"unlist"
+       }},{new:true})
+
+       if(result){
+           res.status(201).json({
+               data:result
+           })
+       }
+    } catch (error) {
+       console.log(error);
+    }
+})
+
+
+const listBanner = asyncHandler(async(req,res)=>{
+    try {
+       const id = req.params.id
+       const result = await Banner.findOneAndUpdate({_id:id},{
+           $set: {
+               status:"list"
+       }},{new:true})
+
+       if(result){
+           res.status(201).json({
+               data:result
+           })
+       }
+    } catch (error) {
+       console.log(error);
+    }
+})
+
+
 const blockOwner = asyncHandler(async(req,res)=>{
     try {
        const id = req.params.id
@@ -501,10 +543,9 @@ const unblockOwner = asyncHandler(async(req,res)=>{
 
 const deleteDestImage = async(req,res)=>{
     try {
+        console.log(req.body);
         const { public_id, id } = req.body;
-        console.log(public_id,id);
         const result = await cloudinary.uploader.destroy(public_id);
-        console.log("result="+result);
         if(result){
             const finalresult = await Destination.updateOne(
                 { _id: id },
@@ -512,7 +553,6 @@ const deleteDestImage = async(req,res)=>{
               );
 
             if(finalresult){
-                console.log(finalresult);
                 res.status(201).json({
                     success: true
                 })
@@ -526,7 +566,6 @@ const deleteDestImage = async(req,res)=>{
 
 
 const editDestination = async(req,res)=>{
-    console.log(req.body);
     const {destination, district, spots,image,public_id} = req.body.destinationData
      
             if (Array.isArray(spots)) {
@@ -594,6 +633,78 @@ const unblockDestination = asyncHandler(async(req,res)=>{
     }
 })
 
+const getDashBoardData = async(req,res)=>{
+    try {
+        const startDate = moment().subtract(7, 'days').startOf('day');
+        const endDate = moment().subtract(1, 'day').endOf('day');
+        const daysOfLastWeek = [];
+        const cabOrderCount = [];
+        const homestayOrderCount = []
+        const hotelOrderCount = []
+        const currentDate = moment();
+        const cabCount = await Cab.countDocuments({})
+        const homeStayCount = await HomeStay.countDocuments({})
+        const hotelCount = await Hotel.countDocuments({})
+        const totalProp = cabCount+homeStayCount+hotelCount
+        const activeUsersCount = await User.countDocuments({status:'active'})
+        const activeOwnersCount = await Owner.countDocuments({status:'active'})
+        const activeCoupens = await Coupen.countDocuments({ expirydate: { $gt: currentDate.toDate()}});
+        const destinationsCount = await Destination.countDocuments({status:'active'})
+        const Owners = await Owner.find({})
+
+        for (let date = startDate; date <= endDate; date = date.clone().add(1, 'day')) {
+            const startOfDay = date.clone().startOf('day');
+            const endOfDay = date.clone().endOf('day');
+            var orders = await Order.find({
+              type: 'Cab',
+              createdAt: { $gte: startOfDay, $lte: endOfDay }
+            });
+            daysOfLastWeek.push(
+                date.format('dddd')
+              );
+            cabOrderCount.push(orders.length)
+        }
+
+        for (let date = startDate; date <= endDate; date = date.clone().add(1, 'day')) {
+            const startOfDay = date.clone().startOf('day');
+            const endOfDay = date.clone().endOf('day');
+            var orders = await Order.find({
+              type: 'HomeStay',
+              createdAt: { $gte: startOfDay, $lte: endOfDay }
+            });
+            homestayOrderCount.push(orders.length)
+        }
+
+        for (let date = startDate; date <= endDate; date = date.clone().add(1, 'day')) {
+            const startOfDay = date.clone().startOf('day');
+            const endOfDay = date.clone().endOf('day');
+            var orders = await Order.find({
+              type: 'Hotel',
+              createdAt: { $gte: startOfDay, $lte: endOfDay }
+            });
+            hotelOrderCount.push(orders.length)
+        }
+
+        res.status(201).json({
+            Cab:cabCount,
+            HomeStay:homeStayCount,
+            Hotel:hotelCount,
+            Property:totalProp,
+            Users:activeUsersCount,
+            Owners:activeOwnersCount,
+            Coupens:activeCoupens,
+            Destinations:destinationsCount,
+            FullOwners:Owners,
+            Days:daysOfLastWeek,
+            cabsOrder:cabOrderCount,
+            homestayOrder:homestayOrderCount,
+            hotelOrder:hotelOrderCount
+        })
+    } catch (error) {
+        console.log(error);
+    }
+}
+
 module.exports = {loginSuperAdmin,
                   registersuperAdmin,
                   addDestination,
@@ -616,5 +727,8 @@ module.exports = {loginSuperAdmin,
                   addCoupen,
                   blockCoupen,
                   unblockCoupen,
-                  editCoupen
+                  editCoupen,
+                  listBanner,
+                  unlistBanner,
+                  getDashBoardData
                 }

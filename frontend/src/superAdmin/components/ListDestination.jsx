@@ -1,15 +1,15 @@
-import axios from 'axios';
 import React, { useEffect, useState } from 'react'
 import { Table, Thead, Tbody, Tr, Th, Td } from 'react-super-responsive-table'
 import 'react-super-responsive-table/dist/SuperResponsiveTableStyle.css';
-import baseURL from '../../config';
 import Modal from './Modal';
 import {GiConfirmed} from "react-icons/gi"
 import {BsFillCheckCircleFill} from 'react-icons/bs'
 import {MdDelete} from 'react-icons/md'
+import { AiFillEdit } from "react-icons/ai"
 import {AiTwotoneDelete} from 'react-icons/ai'
 import {ImBlocked} from "react-icons/im"
 import {CgUnblock} from "react-icons/cg"
+import { superAdminBlockDestination, superAdminDeletedestImage, superAdminEditDestination, superAdminGetDestinations, superAdminUnBlockDestination, uploadCloudinary } from '../../api/SuperadminAPI';
 
 
 function ListDestination() {
@@ -37,6 +37,8 @@ function ListDestination() {
     const [deleteImage, setDeleteImage] = useState(false)
     const [activeSubmit, setActiveSubmit] = useState(false)
     const [destinationData, setDestinationData] = useState('')
+    const [formError, setFormError] = useState('')
+    const [searchTerm, setSearchTerm] = useState('')
 
     const handleDestinationChange = (e)=>{
       const { name, value } = e.target;
@@ -50,13 +52,14 @@ function ListDestination() {
    const handleSubmitChanges = async(e)=>{
        e.preventDefault();
        try {
-        const {data} = await axios.post(`${baseURL}/superadmin/editestination`,{
-            destinationData
-        })
-        if(data){
-          console.log(data);
-          setEditOpen(false);
-          setDestUpdate(!destUpdate)
+        if(destinationData.image === '' || destinationData.public_id === ''){
+              setFormError('Image is required')
+        }else{
+            const {data} = await superAdminEditDestination(destinationData)
+            if(data){
+              setEditOpen(false);
+              setChangeStatus(!changeStatus)
+            }
         }
       } catch (error) {
         console.log("Error:", error.message);
@@ -67,7 +70,6 @@ function ListDestination() {
       e.preventDefault()
 
       const uploadImage = async (image) => {
-        console.log(image);
         if(image === null){
           setErrorImg('Minimum One Document Required')
         }else{
@@ -77,10 +79,7 @@ function ListDestination() {
             formData.append("file", image);
             formData.append("upload_preset", "exploreKerala");
 
-            const response = await axios.post(
-              "https://api.cloudinary.com/v1_1/dp7ydtvg8/image/upload",
-              formData
-            );
+            const response = await uploadCloudinary(formData)
         
             const responseData = response.data;
             setDestinationData((prevState) => ({
@@ -113,24 +112,24 @@ function ListDestination() {
       const pub_id = public_id
       const property_id = dest_id
       try {
-          const {data} = await axios.post(`${baseURL}/superadmin/deletedestinationimage`,{
-              public_id:pub_id,
-              id:property_id
-          })
+          const {data} = await superAdminDeletedestImage(pub_id,property_id)
           if(data.success){
+            setDestinationData((prevState) => ({
+              ...prevState,
+              image: '',
+              public_id: ''
+            }))
               setModalOpen(false)
               setDestUpdate(!destUpdate)
               setDeleteImage(!deleteImage)
           }
-          console.log(data.success);
         } catch (error) {
           console.log("Error:", error.message);
         }
    }
 
 const handleBlockDestination = async(_id)=>{
-    console.log(id);
-    const {data} = await axios.post(`${baseURL}/superadmin/blockdestination/${id}`)
+    const {data} = await superAdminBlockDestination(id)
     if(data){
       setBlockModalopen(false)
       setChangeStatus(!changeStatus)
@@ -138,8 +137,7 @@ const handleBlockDestination = async(_id)=>{
 }
 
 const handleUnblockDestination = async(_id)=>{
-  console.log(id);
-  const {data} = await axios.post(`${baseURL}/superadmin/unblockdestination/${id}`)
+  const {data} = await superAdminUnBlockDestination(id)
   if(data){
     setUnblockModalopen(false)
     setChangeStatus(!changeStatus)
@@ -150,13 +148,12 @@ const handleUnblockDestination = async(_id)=>{
 
     useEffect(()=>{
         async function getDestinations(){
-            const { data,status } = await axios.get(`${baseURL}/superadmin/getdestinations`)
+            const { data,status } = await superAdminGetDestinations()
             if(status === 201){
                 setDestinations(data.destinationdata)
             }
         }
         getDestinations()
-
     },[destUpdate,changeStatus,deleteImage])
 
     const [ currentPage, setCurrentPage] = useState(1)
@@ -168,65 +165,161 @@ const handleUnblockDestination = async(_id)=>{
     const numbers = [...Array( npage + 1 ).keys()].slice(1)
     
 
-  return (
     
-    <div className='rounded-2xl bg-gray-100 bg-opacity-60 bg-transparent mt-16 mb-12'>
-    <Table className="border-collapse w-full rounded-lg">
-    <Thead>
-      <Tr>
-        <Th className="border-2 border-gray-600 text-white font-semibold text-base p-4 bg-gray-600 lg:px-12">Destination</Th>
-        <Th className="border-2 border-gray-600 text-white font-semibold text-base p-4 bg-gray-600 lg:px-12">District</Th>
-        <Th className="border-2 border-gray-600 text-white font-semibold text-base p-4 bg-gray-600 lg:px-12">Spots</Th>
-        <Th className="border-2 border-gray-600 text-white font-semibold text-base p-4 bg-gray-600 lg:px-12">Created On</Th>
-        <Th className="border-2 border-gray-600 text-white font-semibold text-base p-4 bg-gray-600 lg:px-12">Image</Th>
-        <Th className="border-2 border-gray-600 text-white font-semibold text-base p-4 bg-gray-600 lg:px-12">Control</Th>
 
-      </Tr>
-    </Thead>
-    <Tbody>
-      {records.map((element,i)=>(
-      <Tr key={i}>
-        <Td className="border-2 p-5 text-red-700 border-gray-600 bg-gray-100 bg-opacity-60 ">{element.destination}</Td>
-        <Td className="border-2 p-5 border-gray-600 font-semibold text-base bg-gray-100 bg-opacity-60 ">{element.district}</Td>
-        <Td className="border-2 border-gray-600 font-semibold  p-5  text-xs bg-gray-100 bg-opacity-60 ">
-            <div className="flex flex-col">
-               {element.spots.map((e)=>(
-                 <div>
-                    {e}
-                 </div>
-               ))}
-            </div>
-        </Td>
-        <Td className="border-2 border-gray-600 p-5 font-semibold text-base bg-gray-100 bg-opacity-60 ">{element.createdAt.slice(0,10)}</Td>
-        <Td className="border-2 border-gray-600 p-1 bg-gray-100 bg-opacity-60 "><img width={150} height={130} src={element.image} alt="" /></Td>
-        <Td className="border-2 border-gray-600 p-5 bg-gray-100 bg-opacity-60 ">
-             <div className='flex flex-col'>
-                   {element?.status === 'active' ?
-                      <div className='bg-red-600 text-lg px-3 rounded-md text-white text-center font-normal'>
-                        <button onClick={()=>{setBlockModalopen(!blockModalOpen);setId(element._id)}}>Block</button>
-                      </div>
-                        :
-                      <div className='bg-green-800 text-lg px-3 rounded-md text-white text-center font-normal'>
-                        <button onClick={()=>{setUnblockModalopen(!unblockModalOpen);setId(element._id)}}>UnBlock</button>
-                      </div>
-                     }
-                <div className='bg-white mt-3 py-1 text-lg px-3 rounded-md text-black text-center font-normal'>
-                   <button onClick={()=>{setDestinationData(element);setEditOpen(true)}} className=''>Edit</button>
+  return (
+    <div className='flex justify-center'>
+     <div className='container mx-40 lg:px-20 min-h-screen mt-32'>
+                        
+                <div className='grid grid-cols-2'>
+                    <form
+                        className='flex border p-1 rounded-md font-bold text-[#1e1b4b] bg-gray-100/90 w-[100%] '
+                        >
+                        <input
+                            type='text'
+                            placeholder='Search Here...'
+                            className='grow bg-transparent outline-none p-2'
+                            onChange={(e)=>setSearchTerm(e.target.value)}
+                        />
+                    </form>
+                    <div className='text-end my-auto text-white font-bold mr-4'>
+                        Destinations List
+                    </div>
+                    
+                </div>   
+
+                      <div class="-mx-4 sm:-mx-8 px-4 sm:px-8 py-4 overflow-x-auto">
+                        <div className='inline-block min-w-full shadow rounded-lg overflow-hidden'>
+                            <table class="min-w-full leading-normal max-w-fit">
+                                <thead className=''>
+                                  <tr>
+                                    <th
+                                      class="text-center py-3 border-b-2 border-gray-200 bg-blue-950 text-xs font-semibold text-white uppercase tracking-wider">
+                                      Destination
+                                    </th>
+                                    <th
+                                      class="px-5 py-3 border-b-2 border-gray-200 bg-blue-950 text-left text-xs font-semibold text-white uppercase tracking-wider">
+                                      District
+                                    </th>
+                                    <th
+                                      class="px-5 py-3 border-b-2 border-gray-200 bg-blue-950 text-left text-xs font-semibold text-white uppercase tracking-wider">
+                                      Spots
+                                    </th>
+                                    <th
+                                      class="px-5 py-3 border-b-2 border-gray-200 bg-blue-950 text-left text-xs font-semibold text-white uppercase tracking-wider">
+                                      Created On
+                                    </th>
+                                                    <th
+                                      class="px-5 py-3 border-b-2 border-gray-200 bg-blue-950 text-left text-xs font-semibold text-white uppercase tracking-wider">
+                                      Image
+                                    </th>
+                                    <th
+                                      class="px-5 py-3 border-b-2 border-gray-200 bg-blue-950 text-left text-xs font-semibold text-white uppercase tracking-wider">
+                                      Control
+                                    </th>
+                                    <th
+                                      class="px-5 py-3 border-b-2 border-gray-200 bg-blue-950 text-left text-xs font-semibold text-white uppercase tracking-wider">
+                                      Control
+                                    </th>
+                                  </tr>
+                                </thead>
+						                
+                            <tbody>
+                              {records.filter((val)=>{
+                                  if(searchTerm === ''){
+                                      return val
+                                  }else if(val.destination.toLowerCase().includes(searchTerm.toLocaleLowerCase()) || val.district.toLowerCase().includes(searchTerm.toLocaleLowerCase()) ){
+                                      return val
+                                  }
+                                  }).map((element,i)=>(
+                                  <tr>
+                                    <td class="px-5 py-2 border-b border-gray-200 bg-white text-sm">
+                                        <div class="flex items-center">
+                                            
+                                                <div class="ml-3">
+                                                    <p class="text-gray-900 whitespace-no-wrap">
+                                                        {element.destination}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                    </td>
+                                    <td class="px-5 py-2 border-b border-gray-200 bg-white text-sm">
+                                        <p class="text-gray-900 whitespace-no-wrap">{element.district}</p>
+                                    </td>
+                                    <td class="px-5 py-2 border-b border-gray-200 bg-white text-sm">
+                                          {element.spots.map((e)=>(
+                                          <div className='text-xs'>
+                                              {e}
+                                          </div>
+                                        ))}
+                                        {/* <p class="text-gray-900 whitespace-no-wrap">
+                                         {element.fromDate.slice(0,10)}
+                                        </p> */}
+                                    </td>
+                                    <td class="px-5 py-2 border-b border-gray-200 bg-white text-sm">
+                                        <p class="text-gray-900 whitespace-no-wrap">
+                                         {element.createdAt.slice(0,10)}
+                                        </p>
+                                    </td>
+                                    <td class="px-5 py-2 border-b border-gray-200 bg-white text-sm">
+                                      <div>
+                                          <img src={element.image} class="inline-flex items-center justify-center mr-4 text-sm text-white transition-all duration-200 ease-soft-in-out h-9 w-9 rounded-xl" alt="user1" />
+                                      </div>
+                                    </td>
+                                    <td class="px-5 py-2 border-b border-gray-200 bg-white text-sm">
+                                        {element.status === 'active' &&
+                                        <>
+                                          <p class="text-green-700 whitespace-no-wrap">
+                                          {element.status}
+                                          </p>
+                                          <span onClick={()=>{setBlockModalopen(!blockModalOpen);setId(element._id)}} class="bg-gradient-to-tl from-red-600 to-red-400 p-1 rounded-sm px-2.5 text-xs rounded-1.8 py-1.4 inline-block whitespace-nowrap text-center align-baseline font-bold uppercase leading-none text-white">Block</span>
+                                        </>
+                                        }
+                                        {element.status === 'inActive' &&
+                                            <>
+                                              <p class="text-red-600 whitespace-no-wrap">
+                                                  {element.status}
+                                              </p> 
+                                              <span onClick={()=>{setUnblockModalopen(!unblockModalOpen);setId(element._id)}} class="bg-gradient-to-tl from-green-600 to-lime-400 p-1 rounded-sm px-2.5 text-xs rounded-1.8 py-1.4 inline-block whitespace-nowrap text-center align-baseline font-bold uppercase leading-none text-white">Unblock</span>
+                                            </>
+                                        }
+                                        
+                                    </td>
+                                    <td class="px-5 py-2 border-b border-gray-200 bg-white text-sm">
+                                        <div onClick={()=>{setDestinationData(element);setEditOpen(true)}} className='flex flex-row gap-0 cursor-pointer'>
+                                            <div>
+                                               < AiFillEdit size={25} color='blue'/>
+                                            </div>
+                                            <div>
+                                                <p className='text-xs mt-1 text-blue-700'>Edit</p>
+                                            </div>
+                                        </div>
+                                        
+                                    </td>
+                                </tr> 
+                                ))}
+							
+							
+						                </tbody>
+					                </table>
                 </div>
-             </div>
-          </Td>
-      </Tr>
-      ))}
-    </Tbody>
-  </Table>
+            </div>
+
+
+
+                  </div>
             <Modal open={editOpen} onClose={()=>setEditOpen(false)}>
                   <div className='text-center w-96'>
                     
                           <div>
-                             <h1 className='text-red-600'>Edit Destination</h1>
+                             <h1 className='text-red-500 text-lg font-semibold'>Edit Destination</h1>
                             
                             <div className='mx-auto my-4 w-96'>
+                              
                               <form  className="w-full max-w-sm mx-auto text-white bg-[#20354b] p-8 rounded-lg shadow-xl drop-shadow-2xl" encType="multipart/form-data">
+                                    {formError &&
+                                        <h1 className='text-red-600 text-lg font-semibold'>{formError}</h1>
+                                    }
                                   <div className="mb-4">
                                       <label className="block text-white text-sm font-bold mb-2" htmlFor="destination">Destination Name</label>
                                       <input className="w-full px-3 py-2 border text-black border-gray-300 rounded-md focus:outline-none focus:border-indigo-500"
@@ -361,6 +454,7 @@ const handleUnblockDestination = async(_id)=>{
                   </div>
                 </Modal>
   </div>
+  
     
   )
 }

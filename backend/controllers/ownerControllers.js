@@ -1,14 +1,17 @@
 const asyncHandler = require('express-async-handler')
 const Owner = require('../models/ownerModel')
-const adminGenerateToken = require('../utils/generateToken')
+// import adminGenerateToken from '../utils/generateToken'
+const {adminGenerateToken} = require('../utils/generateToken')
 const HomeStay = require('../models/homestayModel')
 const Destination = require('../models/destinationModel')
 const Cab = require('../models/cabsModel')
 const Order = require('../models/ordersModel')
 const Hotel = require('../models/hotelModel')
 const Banner = require('../models/bannerModal')
+const User = require('../models/userModel')
 require('dotenv').config();
 const cloudinary = require('cloudinary').v2;
+const moment = require('moment');
 
 cloudinary.config({
     cloud_name: process.env.CLOUD_NAME,
@@ -18,7 +21,6 @@ cloudinary.config({
 
 const registerOwner = asyncHandler(async (req,res)=>{
     const {firstname, lastname, phonenumber, email, password} = req.body
-    console.log(req.body);
     const adminExists = await Owner.findOne({ email })
      
     if(adminExists) {
@@ -58,6 +60,7 @@ const loginOwner = asyncHandler(async (req,res)=>{
     const owner = await Owner.findOne({ email })
      
     if(owner && (await owner.matchPassword(password))){
+        const token = adminGenerateToken(owner._id)
         res.json({
             _id:owner._id,
             firstname: owner.firstname,
@@ -65,7 +68,7 @@ const loginOwner = asyncHandler(async (req,res)=>{
             phonenumber: owner.phonenumber,
             email: owner.email,
             status: owner.status,
-            token:adminGenerateToken(owner._id)
+            token:token
         })
     }else{
         res.status(400)
@@ -79,10 +82,8 @@ const loginOwner = asyncHandler(async (req,res)=>{
 
 
 const getProfile = async(req,res)=>{
-    console.log("hereererre");
     const id = req.params.id
     const owner = await Owner.findOne({ _id:id })
-    console.log(owner);
     if(owner){
         res.json({
             owner:owner
@@ -121,7 +122,6 @@ const editOwnerProfile = async(req,res)=>{
 
 
 const addHomestays = async(req,res)=>{
-    console.log(req.body);
     try{
         const {admin_id,propertyname, destination, district,address, type, capacity, baseprice,netprice,newImages, newDocument,description} = req.body
         
@@ -179,7 +179,6 @@ const addHomestays = async(req,res)=>{
 
 
 const addHotel = async(req,res)=>{
-    console.log(req.body);
     try{
         const {admin_id,propertyname, destination, district,address, type, capacity, baseprice,netprice,newImages, newDocument,description,numberOfRooms} = req.body
         
@@ -237,11 +236,8 @@ const addHotel = async(req,res)=>{
 
 
 const addCabs = async(req,res)=>{
-    console.log(req.body);
     try{
         const {admin_id,registerNumber,brandname,modelname,destination,district,seatingCapacity,fuelType,minCharge,extraFair,newDocument,newImages} = req.body
-                console.log(newImages);
-                console.log(newDocument);
                 const document = newDocument.documentData
                 const images = newImages.urlArray
                 const propertyExists = await Cab.findOne({ registerNumber })
@@ -392,9 +388,7 @@ const getHotelDetails = async(req, res) =>{
 const deleteCabImage = async(req,res)=>{
     try {
         const { public_id, id } = req.body;
-        console.log(public_id,id);
         const result = await cloudinary.uploader.destroy(public_id);
-        console.log(result);
         if(result){
             const finalresult = await Cab.updateOne(
                 { _id: id },
@@ -417,9 +411,7 @@ const deleteCabImage = async(req,res)=>{
 const deleteHomeStayImage = async(req,res)=>{
     try {
         const { public_id, id } = req.body;
-        console.log(public_id,id);
         const result = await cloudinary.uploader.destroy(public_id);
-        console.log(result);
         if(result){
             const finalresult = await HomeStay.updateOne(
                 { _id: id },
@@ -441,9 +433,7 @@ const deleteHomeStayImage = async(req,res)=>{
 const deleteHotelImage = async(req,res)=>{
     try {
         const { public_id, id } = req.body;
-        console.log(public_id,id);
         const result = await cloudinary.uploader.destroy(public_id);
-        console.log(result);
         if(result){
             const finalresult = await Hotel.updateOne(
                 { _id: id },
@@ -580,11 +570,18 @@ const deleteHotelProperty = async(req,res)=>{
 const getPropertyOrders = async(req,res)=>{
     try {
         const id = req.params.id
-        // console.log(id);
-        const orders = await Order.find({propertyholder:id}).populate('costomer')
+        const pageNumber = req.params.pagenumber
+        const limit = req.params.dataperpage
+
+
+        const orderCount = await Order.countDocuments({propertyholder:id})
+        const numberOfPages = Math.ceil(orderCount/limit)
+        const skippable = (pageNumber -1) * limit
+        const orders = await Order.find({propertyholder:id}).skip(skippable).limit(limit).populate('costomer')
         if(orders){
             res.status(201).json({
-                orders
+                orders,
+                numberOfPages
             })
         }
     } catch (error) {
@@ -592,7 +589,7 @@ const getPropertyOrders = async(req,res)=>{
     }
 }
 
-const addBanner = asyncHandler(async (req,res)=>{
+const addBanner = async (req,res)=>{
     const {heading, description,image_url,public_id,productId,createdby,type} = req.body
     const bannerdata = await Banner.create({
         heading,
@@ -613,7 +610,284 @@ const addBanner = asyncHandler(async (req,res)=>{
         throw new Error('Error occured! Please try again')
     }
 
-})
+}
+
+const approveOrderStatus = async (req,res)=>{
+    const id = req.params.id
+    const orderData = await Order.findOneAndUpdate({_id:id},{$set:{status:'approved'}},{new:true})
+    
+    if(orderData){
+        res.status(201).json({
+            data:orderData,
+            success:true,
+        })
+    }else{
+        res.status(400)
+        throw new Error('Error occured! Please try again')
+    }
+
+}
+
+
+const getTypeData = async(req,res)=>{
+    const id = req.params.id
+    try {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const tomorrow = new Date(today);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        const todayOrders = await Order.countDocuments({
+            propertyholder: id, // Match the specific propertyholder id
+            createdAt: {
+              $gte: today, // createdAt >= today
+              $lt: tomorrow // createdAt < tomorrow
+            }
+          });
+        if(todayOrders ===0 || todayOrders >0){
+            let totalsOrders = await Order.countDocuments({propertyholder:id})
+            if(totalsOrders === 0 || totalsOrders > 0){
+                let cabCount = await Cab.countDocuments({propertyholder:id})
+                if(cabCount ===0 || cabCount > 0){
+                    let homestayCount = await HomeStay.countDocuments({propertyholder:id})
+                    if(homestayCount === 0 || homestayCount > 0){
+                        let hotelCount = await Hotel.countDocuments({propertyholder:id})
+                        if(hotelCount === 0 || hotelCount > 0){
+                            let myPropertis = cabCount+homestayCount+hotelCount
+                            if(myPropertis ===0 || myPropertis>0){
+                                const unlistedCabs = await Cab.countDocuments({propertyholder:id,status:false})
+                                const unlistedHomeStays = await HomeStay.countDocuments({propertyholder:id,status:false})
+                                const unlistedHotels = await Hotel.countDocuments({propertyholder:id,status:false})
+                                let unlistedProperties = unlistedCabs+unlistedHomeStays+unlistedHotels
+                                if(unlistedProperties ===0 || unlistedProperties >0){
+                                    let pendingOrders = await Order.countDocuments({propertyholder:id,status:"Pending"})
+                                    res.status(201).json({
+                                        todayOrders:todayOrders,
+                                        totalOrders:totalsOrders,
+                                        cabCount:cabCount,
+                                        homestayCount:homestayCount,
+                                        hotelCount:hotelCount,
+                                        myPropertis:myPropertis,
+                                        unlistedProperties:unlistedProperties,
+                                        pendingOrders:pendingOrders
+                                    })
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+            
+        
+        // let Cab = 0
+        // let HomeStay = 0
+        // let Hotel = 0
+        // if(typeData){
+        //     typeData.map((element)=>{
+        //         if(element.type === 'Cab'){
+        //              Cab = Cab+1
+        //         }else if(element.type === 'HomeStay'){
+        //               HomeStay = HomeStay+1
+        //         }else{
+        //             Hotel= Hotel+1
+        //         }
+        //     })
+        //     const names = ['Cab','HomeStay','Hotel']
+        //     const values = [Cab, HomeStay, Hotel]
+        //     res.status(201).json({
+        //         names:names,
+        //         values:values
+        //     })
+        // }
+    } catch (error) {
+        console.log(error);
+    }
+}
+
+
+const getChartsData = async(req,res)=>{
+    const id = req.params.id
+    try {
+        let Cab = 0
+        let HomeStay = 0
+        let Hotel = 0
+        const typeData = await Order.find({propertyholder:id})
+        if(typeData){
+            typeData.map((element)=>{
+                if(element.type === 'Cab'){
+                     Cab = Cab+1
+                }else if(element.type === 'HomeStay'){
+                      HomeStay = HomeStay+1
+                }else{
+                    Hotel= Hotel+1
+                }
+            })
+            const names = ['Cab','HomeStay','Hotel']
+            const values = [Cab, HomeStay, Hotel]
+            res.status(201).json({
+                names:names,
+                values:values
+            })
+        }
+    } catch (error) {
+        console.log(error);
+    }
+}
+
+
+const getWeekOrders = async(req,res)=>{
+    const id = req.params.id
+    try {
+        const startDate = moment().subtract(7, 'days').startOf('day');
+        const endDate = moment().subtract(1, 'day').endOf('day');
+        const daysOfLastWeek = [];
+        const cabOrderCount = [];
+        const homestayOrderCount = []
+        const hotelOrderCount = []
+
+        for (let date = startDate; date <= endDate; date = date.clone().add(1, 'day')) {
+            const startOfDay = date.clone().startOf('day');
+            const endOfDay = date.clone().endOf('day');
+            var orders = await Order.find({
+              propertyholder: id,
+              type: 'Cab',
+              createdAt: { $gte: startOfDay, $lte: endOfDay }
+            });
+            daysOfLastWeek.push(
+                date.format('dddd')
+              );
+            cabOrderCount.push(orders.length)
+        }
+
+        for (let date = startDate; date <= endDate; date = date.clone().add(1, 'day')) {
+            const startOfDay = date.clone().startOf('day');
+            const endOfDay = date.clone().endOf('day');
+            var orders = await Order.find({
+              propertyholder: id,
+              type: 'HomeStay',
+              createdAt: { $gte: startOfDay, $lte: endOfDay }
+            });
+            homestayOrderCount.push(orders.length)
+        }
+
+        for (let date = startDate; date <= endDate; date = date.clone().add(1, 'day')) {
+            const startOfDay = date.clone().startOf('day');
+            const endOfDay = date.clone().endOf('day');
+            var orders = await Order.find({
+              propertyholder: id,
+              type: 'Hotel',
+              createdAt: { $gte: startOfDay, $lte: endOfDay }
+            });
+            hotelOrderCount.push(orders.length)
+        }
+
+
+          res.status(201).json({
+            Days:daysOfLastWeek,
+            Cabs:cabOrderCount,
+            HomeStays:homestayOrderCount,
+            Hotels:hotelOrderCount
+
+          })
+
+    } catch (error) {
+        console.log(error);
+    }
+}
+
+
+const getPendingOrders = async(req,res)=>{
+    const id = req.params.id
+    try {
+        const count = await Order.countDocuments({propertyholder:id,status:'Pending'})
+        if(count){
+            res.status(201).json({
+                OrderCount:count
+            })
+        }
+    } catch (error) {
+        console.log(error);
+    }
+}
+
+
+
+const getOrderStatuses = async(req,res)=>{
+    const id = req.params.id
+    try {
+        let Confirmed = 0
+        let Cancelled = 0
+        let Pending = 0
+        let Approved = 0
+        const statusData = await Order.find({propertyholder:id})
+        if(statusData){
+            statusData.map((element)=>{
+                if(element.status === 'confirmed'){
+                    Confirmed = Confirmed+1
+                }else if(element.status === 'cancelled'){
+                    Cancelled = Cancelled+1
+                }else if (element.status === 'Pending'){
+                    Pending= Pending+1
+                }else{
+                    Approved=Approved+1
+                }
+            })
+            const names = ['Confirmed','Cancelled','Pending','Approved']
+            const values = [Confirmed, Cancelled, Pending, Approved]
+            res.status(201).json({
+                names:names,
+                values:values
+            })
+        }
+    } catch (error) {
+        console.log(error);
+    }
+}
+
+
+const getTypeNumberData = async(req,res)=>{
+    const id = req.params.id
+    try {
+        let values = []
+        const cabNumber = await Cab.countDocuments({ propertyholder: id })
+        if(cabNumber){
+            values.push(cabNumber)
+            const homestayNumber = await HomeStay.countDocuments({ propertyholder: id })
+            if(homestayNumber){
+                values.push(homestayNumber)
+                const hotelNumber = await Hotel.countDocuments({ propertyholder: id })
+                if(hotelNumber){
+                    values.push(hotelNumber)
+                    res.status(201).json({
+                        values: values
+                    })
+                }
+            }
+        }
+    } catch (error) {
+        console.log(error);
+    }
+}
+
+
+
+const getUsersData = async(req, res) =>{
+    const id = req.params.id
+    try{
+        const userData = await User.findOne({_id:id})
+        if(userData){
+            res.status(201).json({
+                userData
+            })
+        }else{
+            res.status(400)
+            throw new Error('Error occured! Please try again')
+        }
+    }catch(error){
+        console.log(error);
+    }
+}
 
 
 module.exports = {registerOwner,
@@ -637,6 +911,14 @@ module.exports = {registerOwner,
                      deleteHomestayProperty,
                      deleteHotelProperty,
                      getPropertyOrders,
-                     addBanner
+                     addBanner,
+                     approveOrderStatus,
+                     getTypeData,
+                     getTypeNumberData,
+                     getChartsData,
+                     getOrderStatuses,
+                     getWeekOrders,
+                     getPendingOrders,
+                     getUsersData
                      
                     }

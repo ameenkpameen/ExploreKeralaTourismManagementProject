@@ -17,6 +17,7 @@ import {BiAddToQueue} from "react-icons/bi"
 import {FaMapMarkerAlt} from "react-icons/fa"
 import {ImProfile} from "react-icons/im"
 import SideBar from '../components/SideBar'
+import SuperDashBoard from '../components/SuperDashBoard'
 
 
 function SuperAdminHome() {
@@ -52,8 +53,7 @@ function SuperAdminHome() {
   return (
     <div className='bg-opacity-70' style={{ backgroundImage: `url(${image})`, backgroundSize: 'cover' , backdropFilter: 'blur(10px)' }}>
       <SuperAdminHeader />
-        <SideBar />
-          
+          <SuperDashBoard />
       <SuperAdminFooter />
     </div>
   )

@@ -1,20 +1,10 @@
-import gradient from '@material-tailwind/react/theme/components/timeline/timelineIconColors/gradient'
-import axios from 'axios'
 import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom';
-
-import {GrLocation} from "react-icons/gr"
-import {BiDetail} from "react-icons/bi"
 import {MdDangerous} from "react-icons/md"
-import {GiConfirmed} from "react-icons/gi"
 import Modal from './Modal'
-import {TiTick} from "react-icons/ti"
-import baseURL from '../../config'
 import { useDispatch, useSelector } from 'react-redux'
-import { getFilteredData } from '../../actions/userActions'
-import ImageModal from './ImageModal'
-import {HiMenuAlt3} from "react-icons/hi"
-import ImageSlider from './ImageSlider';
+import { getBanners, getDestination, getFilterData } from '../../api/UserAPI';
+import TokenExpireModal from './TokenExpireModal';
 
 
 function PlanTrip() {
@@ -28,19 +18,16 @@ function PlanTrip() {
     const [type, setType] = useState('')
     const [numberOfPeople, setNumberOfPeople] = useState(0)
     const [priceLimit, setPriceLimit] = useState(0)
-    const [openFilteredData,setOpenFilteredData] = useState(false)
     const [filterData,setFilterData] = useState([])
-    const [details, setDetails] = useState(false)
-    const [owner, setOwner] = useState(false)
     const [filterError, setFilterError] = useState('')
     const [formError, setFormError] = useState('')
+    const [errorCatch, setErrorCatch]= useState('')
 
     const [open, setOpen] = useState(false)
     const [imageOpen, setImageOpen] = useState(false)
-    const [modalData, setModalData] = useState('')
+    // const [modalData, setModalData] = useState('')
     const [modalImage,setModalImage] = useState('')
 
-    const[message, setMessage] = useState(null)
     const dispatch = useDispatch()
     const [destinations, setDestinations] = useState([])
     const [bannerData, setBannerData] = useState([])
@@ -73,9 +60,9 @@ function PlanTrip() {
                     setFormError('ToDate must be greater than FromDate')
                     setOpen(true)
                 }else{
-                  dispatch(getFilteredData(destination,fromDate,toDate,type,numberOfPeople,priceLimit))
+                //   dispatch(getFilteredData(destination,fromDate,toDate,type,numberOfPeople,priceLimit))
                   console.log(type);
-                  const { data } = await axios.post(`${baseURL}/getfiltereddata`,{destination,fromDate,toDate,type,numberOfPeople,priceLimit})
+                  const { data } = await getFilterData(destination,fromDate,toDate,type,numberOfPeople,priceLimit) 
                   if(data){
                     setFilterData(data.data)
                     const crieterias = {
@@ -99,7 +86,10 @@ function PlanTrip() {
            }
         
         } catch (error) {
-            console.log(error);
+            if(error.response.data.message === 'jwt expired'){
+                localStorage.removeItem('userInfo')
+                setErrorCatch(error.response.data.message)
+            }
         }
     }
 
@@ -152,17 +142,24 @@ function PlanTrip() {
 
     useEffect(()=>{
         async function getDestinations(){
-            const {data} = await axios.get(`${baseURL}/getdestinations`)
-            if(data){
-                const destinationArray = []
-                data.destinationdata.forEach((e)=>{
-                    destinationArray.push(e.destination)
-                })
-                setDestinations(destinationArray)
-            }
-            const banners = await axios.get(`${baseURL}/getbanners`)
-            if(banners){
-                setBannerData(banners.data.bannerdata)
+            try {
+                const {data} = await getDestination()
+                if(data){
+                    const destinationArray = []
+                    data.destinationdata.forEach((e)=>{
+                        destinationArray.push(e.destination)
+                    })
+                    setDestinations(destinationArray)
+                }
+                const banners = await getBanners
+                if(banners){
+                    setBannerData(banners.data.bannerdata)
+                }
+            } catch (error) {
+                if(error?.response?.data?.message === 'jwt expired'){
+                    localStorage.removeItem('userInfo')
+                    setErrorCatch(error.response.data.message)
+                }
             }
         }
         getDestinations()
@@ -180,31 +177,30 @@ function PlanTrip() {
 
   return (
     <> 
-       <div style={{ ...containerStyle, marginTop: '40px' }}>
+    
+       {/* <div style={{ ...containerStyle, marginTop: '40px' }}>
           <ImageSlider slides={slides[0]}/> 
-       </div>
-    
-    <div className='flex items-center justify-center lg:pt-20 md:pt-14 sm:pt-12'>
-        <h1 className='text-blue-800 text-2xl relative items-center justify-center'>Our Packages</h1>
-    </div>
-    <div className='flex items-center justify-center lg:pt-6 md:pt-14 sm:pt-12'>
-      <h1 className="text-white lg:text-6xl sm:text-4xl relative items-center justify-center">
-        <span className="bg-gradient-to-r from-blue-700 via-pink-600 to-red-700 text-transparent bg-clip-text">
-            Search Your Holiday
-        </span>
-      </h1>
-    </div>
-    <div className='flex items-center justify-center lg:pt-6 md:pt-14 sm:pt-12'>
-       <h1 className="text-white lg:text-6xl sm:text-4xl relative items-center justify-center">
-        <span className="bg-gradient-to-r from-blue-700 via-pink-600 to-red-700 text-transparent bg-clip-text">
-            With Us...
-        </span>
-      </h1>
+       </div> */}
+    <div className='flex justify-center'>
+     <div className='container min-h-screen mt-32'>
+       <div className='flex items-center justify-center lg:pt-20 md:pt-14 sm:pt-12'>
+            <h1 className='text-white text-2xl font-bold relative items-center justify-center'>Our Packages</h1>
+        </div>
+        <div className='flex items-center justify-center lg:pt-6 md:pt-14 sm:pt-12'>
+             <h1 className="text-white lg:text-6xl sm:text-4xl relative items-center justify-center">
+                <span className="bg-gradient-to-r from-blue-300 via-pink-500 to-red-400 text-transparent bg-clip-text font-bold">
+                  Search Your Holiday
+                </span>
+             </h1>
+        </div>
+        <div className='flex items-center justify-center lg:pt-6 md:pt-14 sm:pt-12'>
+             <h1 className="text-white lg:text-6xl sm:text-4xl relative items-center justify-center">
+              <span className="bg-gradient-to-r from-blue-500 via-pink-600 to-red-600 text-transparent bg-clip-text font-bold">
+                  With Us...
+              </span>
+             </h1>
 
-    </div>
-
-
-    
+         </div>
       <>
       {filterError &&
          <h2 className='mt-10 rounded-md font-thin bg-red-600 p-3 text-center text-white'>{filterError}</h2>
@@ -356,6 +352,11 @@ function PlanTrip() {
                 </div>
             </div>
         </Modal>
+        </div>
+        </div>
+        {errorCatch !== '' &&
+            <TokenExpireModal message={errorCatch} />
+        }
    </>
   )
 }

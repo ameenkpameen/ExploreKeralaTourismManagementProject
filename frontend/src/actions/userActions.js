@@ -2,6 +2,7 @@ import axios from "axios";
 import baseURL from "../config";
 import { USER_EDITPROFILE_FAIL, USER_EDITPROFILE_REQUEST, USER_EDITPROFILE_SUCCESS, USER_GETDESTINATIONDATA_FAIL, USER_GETDESTINATIONDATA_REQUEST, USER_GETDESTINATIONDATA_SUCCESS, USER_GETFILTEREDDATA_FAIL, USER_GETFILTEREDDATA_REQUEST, USER_GETFILTEREDDATA_SUCCESS, USER_LOGIN_FAIL, USER_LOGIN_REQUEST, USER_LOGIN_SUCCESS, USER_LOGOUT, USER_REGISTER_FAIL, USER_REGISTER_REQUEST, USER_REGISTER_SUCCESS } from "../constants/userConstants";
 import { Navigate } from "react-router-dom";
+import { editProfileData } from "../api/UserAPI";
 
 export const login = (email,password) => async(dispatch) =>{
     
@@ -13,8 +14,6 @@ export const login = (email,password) => async(dispatch) =>{
                 "Content-type":"application/json"
             }
         }
-        
-        
         const { data } = await axios.post(`${baseURL}/login`,
          {
             email,
@@ -24,7 +23,6 @@ export const login = (email,password) => async(dispatch) =>{
         );
 
         dispatch({type: USER_LOGIN_SUCCESS, payload: data})
-        
         localStorage.setItem('userInfo',JSON.stringify(data))
         
     } catch (error) {
@@ -61,9 +59,6 @@ export const login = (email,password) => async(dispatch) =>{
                 "Content-type": "application/json"
             },
         }
-
-        
-
           const { data } = await axios.post(`${baseURL}/signup`,
             {
                 firstname,
@@ -97,15 +92,7 @@ export const editProfile = (id,firstname, lastname,phonenumber, email)=> async (
               "Content-type":"application/json"
           }
       }
-      const { data } = await axios.put(`${baseURL}/editprofile/${id}`,
-          {
-              firstname,
-              lastname,
-              phonenumber,
-              email
-          },
-          config
-        )
+      const { data } = await editProfileData(id,firstname,lastname,phonenumber,email,config)
         if(data){
           dispatch({type: USER_EDITPROFILE_SUCCESS, payload: data});
         }

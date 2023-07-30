@@ -7,10 +7,13 @@ function ViewOrderDetails() {
     const from = data.fromDate.slice(0,10)
     const to = data.toDate.slice(0,10)
     const orderedDate = data.createdAt.slice(0,10)
+    
     // console.log(data);
   return (
     <div>
-      <div className='text-center max-w-4xl mt-10 mb-6 rounded-lg'>
+      <div className='flex justify-center'>
+     <div className='container min-h-screen mt-32'>
+      <div className='text-center max-w-sm mt-10 px-3 rounded-lg mx-auto mb-20'>
              <div class="flex flex-col px-4 py-6 md:p-6 xl:p-8 w-full bg-gray-50 dark:bg-gray-800 space-y-6">
                    <h3 class="text-xl dark:text-white font-semibold leading-5 text-gray-800">{data.type} Summary</h3>
                    
@@ -80,6 +83,8 @@ function ViewOrderDetails() {
                    </div>
                  </div>
            </div>
+    </div>
+    </div>
     </div>
   )
 }

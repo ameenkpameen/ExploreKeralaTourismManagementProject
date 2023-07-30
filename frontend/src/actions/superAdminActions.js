@@ -1,24 +1,13 @@
 import axios from "axios";
 import baseURL from "../config";
 import {  SUPERADMIN_ADDDEST_FAIL, SUPERADMIN_ADDDEST_REQUEST, SUPERADMIN_ADDDEST_SUCCESS, SUPERADMIN_LOGIN_FAIL, SUPERADMIN_LOGIN_REQUEST, SUPERADMIN_LOGIN_SUCCESS, SUPERADMIN_LOGOUT, SUPERADMIN_REGISTER_FAIL, SUPERADMIN_REGISTER_REQUEST, SUPERADMIN_REGISTER_SUCCESS } from "../constants/superAdminConstants";
+import { superAdminAddBanner, superAdminAddDestination, superAdminLogin } from "../api/SuperadminAPI";
 
 export const superadminLogin = (email,password) => async(dispatch) =>{
     
     try {
-        console.log(email,password);
         dispatch({type: SUPERADMIN_LOGIN_REQUEST})
-        const config = {
-            headers: {
-                "Content-type":"application/json"
-            }
-        }
-        const { data } = await axios.post(`${baseURL}/superadmin/login`,
-         {
-            email,
-            password,
-         },
-         config
-        );
+        const { data } = await superAdminLogin(email, password);
         dispatch({type: SUPERADMIN_LOGIN_SUCCESS, payload: data})
         localStorage.setItem('superadminInfo',JSON.stringify(data))
         
@@ -96,12 +85,8 @@ export const addDestination = (destination,district,spots,image_url,public_id) =
                 },
                 withCredentials:true,
             }
-            const { data } = await axios.post(`${baseURL}/superadmin/adddestination`,
-                formData,
-                config
-            )
+            const { data } = await superAdminAddDestination(formData,config)
             if(data){
-                
                 dispatch({type: SUPERADMIN_ADDDEST_SUCCESS, payload:data})
             }
     } catch (error) {
@@ -129,10 +114,7 @@ export const addBanner = (heading,description,image_url,public_id) => async(disp
                 },
                 withCredentials:true,
             }
-            const { data } = await axios.post(`${baseURL}/superadmin/addbanner`,
-                formData,
-                config
-            )
+            const { data } = await superAdminAddBanner(formData,config)
             if(data){
                 
                 dispatch({type: SUPERADMIN_ADDDEST_SUCCESS, payload:data})

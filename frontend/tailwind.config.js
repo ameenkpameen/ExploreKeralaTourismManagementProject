@@ -12,7 +12,10 @@ module.exports = {
       gridTemplateColumns: {
         sidebar: "300px auto", //for sidebar layout
         "sidebar-collapsed": "64px auto", //for collapsed sidebar layout
-      }
+      },
+      fontSize: {
+        'xxs': '0.5rem', // You can adjust the value as per your preference
+      },
     },
   },
   plugins: [],

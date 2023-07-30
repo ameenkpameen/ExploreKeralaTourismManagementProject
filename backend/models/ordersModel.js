@@ -57,14 +57,13 @@ const orderSchema = mongoose.Schema(
         },
         paymentmethod:{
             type: String,
-            required:true,
-            enum:['stripe','wallet'],
-            default:'stripe',
+            enum:['stripe','wallet','Not Done'],
+            default:'Not Done',
         },
         status:{
             type: String,
             required:true,
-            default: 'confirmed',
+            default: 'Pending',
         }
     },
     {

@@ -3,15 +3,12 @@ import { Link } from 'react-router-dom';
 
 import {LuLayoutDashboard} from "react-icons/lu"
 import {MdAddHomeWork} from "react-icons/md"
-import {FaMapMarkerAlt} from "react-icons/fa"
 import {MdOutlinePropaneTank} from "react-icons/md"
 import {AiFillNotification} from "react-icons/ai"
 import { BiChat } from "react-icons/bi"
-
 import {ImProfile} from "react-icons/im"
-import OwnerProfile from './OwnerProfile';
-import AddProperties from './AddProperties';
-import MyProperties from './MyProperties';
+import { BsFillArrowLeftCircleFill } from "react-icons/bs"
+import { BsFillArrowRightCircleFill } from "react-icons/bs"
 
 function SideBar({children}) {
 
@@ -25,19 +22,22 @@ function SideBar({children}) {
         {name: "Chats", link:"/owner/mychats", icon: BiChat},
     ]
 
-    const [open, setOpen] = useState(true);
-    const [active, setActive] = useState("Add Destination")
-    const [navbar, setNavbar] = useState(false)
-
-
-
+    const [open, setOpen] = useState(false);
   return (
     <section className='flex gap-6 '>
 
        
-                <div className={`sidebar min-h-screen top-16 mt-16  bottom-0 lg:left-0 p-2 ${open ? 'w-72' :'hidden'} sm:w-1/6  duration-500 text-gray-100 overflow-y-auto text-center bg-black`}>
+                <div className={`sidebar min-h-screen top-16 mt-16  bottom-0 lg:left-0 p-2 ${open ? 'w-64' :'w-16'}   duration-500 text-gray-100 overflow-y-auto text-center bg-black`}>
                     
                     <div className='mt-4 flex flex-col gap-4 relative pt-5'>
+                           {open ?
+                            <div className=' flex justify-end text-gray-50'>
+                                     <BsFillArrowLeftCircleFill size={26} className='cursor-pointer' onClick={()=>setOpen(!open)}/>
+                            </div>  :
+                             <div className=' flex justify-end text-gray-50'>
+                                    <BsFillArrowRightCircleFill size={26} className='cursor-pointer' onClick={()=>setOpen(!open)}/>
+                             </div>
+                           }
                         {
                         menus?.map((menu,i)=>(
                             <Link  key={i} className='group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md ' to={menu.link}>

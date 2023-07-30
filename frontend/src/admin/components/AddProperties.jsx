@@ -9,8 +9,9 @@ import {
   } from "@material-tailwind/react";
 import HomeStayAdd from './HomeStayAdd';
 import CabsAdd from './CabsAdd';
-import axios from 'axios';
 import baseURL from '../../config';
+import { ownerGetDestinations } from '../../api/OwnerAPI';
+import OwnerTokenExpire from './OwnerTokenExpire';
 
 function AddProperties(props) {
 
@@ -22,6 +23,7 @@ function AddProperties(props) {
    const [active,setActive] = useState('');
    const [destinations,setDestinations] = useState([])
    const [add,setAdd] = useState(false);
+   const [errorCatch, setErrorCatch] = useState('')
 
   const menus = [
     {name: "HomeStays", link:"https://akm-img-a-in.tosshub.com/businesstoday/images/story/201810/home-loan_660_020117053409_030917101300_103018074036.jpg"},
@@ -31,13 +33,22 @@ function AddProperties(props) {
 
   useEffect(()=>{
     async function getDestinations(){
-        const {data} = await axios.get(`${baseURL}/owner/getdestinations`)
-        if(data){
-            const destinationArray = []
-            data.destinationdata.forEach((e)=>{
-                destinationArray.push(e.destination)
-            })
-            setDestinations(destinationArray)
+        try {
+            const {data} = await ownerGetDestinations
+            if(data){
+                const destinationArray = []
+                data.destinationdata.forEach((e)=>{
+                    destinationArray.push(e.destination)
+                })
+                setDestinations(destinationArray)
+            }
+        } catch (error) {
+            if(error?.response?.data?.message === 'jwt expired'){
+                localStorage.removeItem('ownerInfo')
+                setErrorCatch(error.response.data.message)
+            }else{
+                console.log(error);
+            }
         }
     }
     getDestinations()
@@ -45,11 +56,13 @@ function AddProperties(props) {
 
   return (
    <>
+   <div className='flex justify-center'>
+     <div className='container lg:px-40 min-h-screen mt-32'>
     {owner.status === 'inActive' ?
-    <h1 className=' text-red-600 bg-white p-5 rounded-lg'>You Are Blocked by Admin</h1> :
-    <div className='py-2'>
+       <h1 className=' text-red-600 bg-white p-5 rounded-lg'>You Are Blocked by Admin</h1> :
+            <div className='py-2 mx-20'>
                 {!add &&
-                <div className='grid grid-cols-1 lg:grid-cols-3 lg:gap-3 justify-items-center mt-5 rounded-lg'>
+                <div className='grid grid-cols-1 lg:grid-cols-3 lg:gap-0 justify-items-center mt-5 rounded-lg'>
                     {
                         menus?.map((menu, index)=>(
                     <Card key={index} className="mt-6 w-80 p-5 bg-[#20354b] items-center">
@@ -78,8 +91,13 @@ function AddProperties(props) {
                         {active === "Cabs" && < CabsAdd setActive={props.basesetActive} active={props.baseactive} setAdd={setAdd} add={add} destinations={destinations} Heading={"ADD CABS"}/>}
                     </div>
                 </div>
-    </div>
+       </div>
     }
+    </div>
+    </div>
+    {errorCatch !== '' &&
+        <OwnerTokenExpire message={errorCatch}/>
+      }
     </>
   )
 }

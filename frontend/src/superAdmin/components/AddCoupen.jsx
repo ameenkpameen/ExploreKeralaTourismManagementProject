@@ -1,10 +1,9 @@
 import React, { useState } from 'react'
 import Modal from './Modal'
 import {MdDangerous} from "react-icons/md"
-import axios from 'axios'
-import baseURL from '../../config'
 import { TiTick } from 'react-icons/ti'
 import { useNavigate } from 'react-router-dom'
+import { superAdminAddCoupen } from '../../api/SuperadminAPI'
 
 function AddCoupen() {
   const navigate = useNavigate()
@@ -44,11 +43,7 @@ const submitHandler = async(e)=>{
             setFormError('Minimum 8 characters are required in coupen code')
             setOpen(true)
         }else{
-            const {data} = await axios.post(`${baseURL}/superadmin/addcoupen`,{
-                type,
-                expiry,
-                percentage,maxoffer,coupencode
-            })
+            const {data} = await superAdminAddCoupen(type,expiry,percentage,maxoffer,coupencode)
             if(data){
                 if(!data.success){
                     setFormError(`Coupen "${coupencode}" Already Registered`)
@@ -68,10 +63,12 @@ const submitHandler = async(e)=>{
   return (
     <> 
       <>
+      <div className='flex justify-center'>
+       <div className='container min-h-screen mt-32'>
       <div className='flex items-center justify-center lg:pt-20 md:pt-14 sm:pt-12 -mb-20'>
-        <h1 className='text-white text-2xl relative items-center justify-center'>Add Coupens</h1>
-    </div>
-     <form action="" className='min-h-screen flex flex-row items-center justify-center -mt-28'>
+        <h1 className='text-blue-950 text-2xl font-bold relative items-center justify-center'>Add Coupens</h1>
+      </div>
+     <form action="" className='min-h-screen flex flex-row items-center justify-center -mt-40'>
         
         
         <div className='relative grid grid-cols-1 lg:grid-cols-3 lg:gap-4 justify-items-center  rounded-lg bg-gray-100 p-10'>
@@ -195,6 +192,8 @@ const submitHandler = async(e)=>{
                 </div>
         </div>
      </form>
+     </div>
+     </div>
      </>
         <Modal open={open} onClose={()=>setOpen(false)}>
             <div className='text-center'>

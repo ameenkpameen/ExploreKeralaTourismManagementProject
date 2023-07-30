@@ -9,6 +9,8 @@ import Modal from './Modal';
 import {GiConfirmed} from "react-icons/gi"
 import {BiErrorAlt} from 'react-icons/bi'
 import { useNavigate } from 'react-router-dom';
+import { uploadCloudinary } from '../../api/OwnerAPI';
+import OwnerTokenExpire from './OwnerTokenExpire';
 
 function AddBanner() {
     const dispatch = useDispatch()
@@ -25,6 +27,7 @@ function AddBanner() {
     const [errorImg, setErrorImg] = useState('')
     const [activeSubmit, setActiveSubmit] = useState(false)
     const [open, setOpen] =useState(false)
+    const [errorCatch, setErrorCatch] = useState('')
 
     if(localStorage.ownerInfo !== undefined){
         var owner = JSON.parse(localStorage.ownerInfo);
@@ -48,10 +51,7 @@ function AddBanner() {
               formData.append("file", image);
               formData.append("upload_preset", "exploreKerala");
   
-              const response = await axios.post(
-                "https://api.cloudinary.com/v1_1/dp7ydtvg8/image/upload",
-                formData
-              );
+              const response = await uploadCloudinary(formData)
           
               const responseData = response.data;
               setImage_url(responseData.url);
@@ -63,7 +63,12 @@ function AddBanner() {
               setErrorImg('')
               setActiveSubmit(true)
             } catch (error) {
-              console.log(error);
+                if(error?.response?.data?.message === 'jwt expired'){
+                    localStorage.removeItem('ownerInfo')
+                    setErrorCatch(error.response.data.message)
+                }else{
+                    console.log(error);
+                }
             }
           }
         
@@ -184,6 +189,9 @@ function AddBanner() {
                       
                   </div>
               </Modal>
+              {errorCatch !== '' &&
+                    <OwnerTokenExpire message={errorCatch}/>
+                }
         </div>
   )
 }

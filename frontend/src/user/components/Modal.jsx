@@ -9,9 +9,7 @@ function Modal({open,onClose, children}) {
           <button onClick={onClose} className='absolute top-3 z-10 right-3 p-1 rounded-full text-white bg-red-600  hover:text-white'>
             <AiOutlineClose />
           </button>
-
            {children}
-
         </div>
     </div>
   )

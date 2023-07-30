@@ -1,40 +1,64 @@
 import React, { useEffect, useState } from 'react'
-import axios from 'axios';
-import baseURL from '../../config';
 import {VscDebugBreakpointLog} from "react-icons/vsc"
 import { useNavigate } from 'react-router-dom';
+import { getDestination, getDestinationData, getDestinationProperties } from '../../api/UserAPI';
+import TokenExpireModal from './TokenExpireModal';
+import ReactPaginate from 'react-paginate';
 
 function ListDestinations() {
    
    const navigate = useNavigate()
    const [destinations,setDestinations] = useState([])
+   const [errorCatch, setErrorCatch]= useState('')
+   const [pageNumber, setPageNumber] = useState(1)
+   const [totalPages, setTotalPages]= useState(1)
 
+   const dataPerPage = 3
   
-
   const exploreSubmit = async(destination)=>{
-      const {data} = await axios.get(`${baseURL}/destinationproperties/${destination}`)
+    try {
+      const {data} = await getDestinationProperties(destination)
       if(data){
         navigate('/showdestinationproperties',{state:data.combinedArray})
       }
+    } catch (error) {
+      if(error.response.data.message === 'jwt expired'){
+        localStorage.removeItem('userInfo')
+        setErrorCatch(error.response.data.message)
+      }
+    }
   }
 
 
   useEffect(()=>{
-    async function getDestinations(){
-        const {data} = await axios.get(`${baseURL}/getdestinations`)
-        if(data){
-            setDestinations(data.destinationdata)
-        }
+    const getDestinations = async()=>{
+       try {
+         const {data} = await getDestinationData(pageNumber,dataPerPage)
+         if(data){
+              setTotalPages(data.numberOfPages)
+             setDestinations(data.destinationdata)
+         }
+       } catch (error) {
+          if(error.response.data.message === 'jwt expired'){
+            localStorage.removeItem('userInfo')
+            setErrorCatch(error.response.data.message)
+          }
+       }
     }
     getDestinations()
-  },[])
 
+  },[pageNumber])
+
+  let handlePageClick = (e)=>{
+    setPageNumber(e.selected+1)
+  }
 
   return (
-    <div className='min-h-screen mt-5'>
-          <div className='grid grid-cols-1 lg:grid-cols-3 md:grid-cols-2 lg:gap-7 md:gap-7 gap-7 justify-items-center mt-20 rounded-lg mb-20'>
+    <div className='flex justify-center'>
+      <div className='container min-h-screen mt-5'>
+          <div className='grid grid-cols-1 lg:grid-cols-3 lg:mx-32 md:grid-cols-2 lg:gap-10 md:gap-10 gap-7 justify-items-center mt-40 rounded-lg mb-20 mx-7'>
             {destinations.map((element)=>(
-              <section className=" rounded-2xl px-8 py-6 w-full shadow-lg  bg-gray-50 bg-opacity-60">
+              <section className=" rounded-lg px-8 py-6 w-full shadow-lg md:mx-8 sm:mx-8 bg-gray-50 bg-opacity-80">
                     {/* {error && <AdminError message={error}>{error}</AdminError>}
                     {loading && <AdminLoading />} */}
                    <div>
@@ -77,8 +101,26 @@ function ListDestinations() {
                 </section>
 
              ))}
-                
+                 
         </div>
+                <ReactPaginate
+                  breakLabel="..."
+                  nextLabel= "next >"
+                  onPageChange={handlePageClick}
+                  pageRangeDisplayed={dataPerPage}
+                  pageCount={totalPages}
+                  containerClassName={'paginationBttns'}
+                  previousLinkClassName={'previousBttn'}
+                  nextLinkClassName={'nextBttn'}
+                  disabledClassName={'paginationDisabled'}
+                  activeClassName={'paginationActive'}
+                  previousLabel="< previous"
+                  renderOnZeroPageCount={null}
+                />
+     </div>
+     {errorCatch !== '' &&
+        <TokenExpireModal message={errorCatch} />
+    }
      </div>
   )
 }

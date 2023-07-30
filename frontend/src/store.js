@@ -4,6 +4,7 @@ import { composeWithDevTools } from "redux-devtools-extension"
 import { getDestinationDataReducer, getFilteredDataReducer, userEditProfileReducer, userLoginReducer, userRegisterReducer } from "./reducers/userReducers"
 import { adminAddCabsReducer, adminAddHomeStayReducer, adminAddHotelReducer, adminEditProfileReducer, adminLoginReducer, adminRegisterReducer, ownerAddBannerReducer, ownerAddCabsReducer, ownerAddHomeStayReducer, ownerAddHotelReducer, ownerEditProfileReducer, ownerLoginReducer, ownerRegisterReducer } from "./reducers/adminReducers"
 import { addBannerReducer, addDestinationReducer, superadminLoginReducer, superadminRegisterReducer } from "./reducers/superAdminReducers"
+import { alertSlice, showLoading } from "./actions/alertSlice"
 
 const reducer = combineReducers({
    userLogin: userLoginReducer,
@@ -21,6 +22,7 @@ const reducer = combineReducers({
    adminAddCabs: ownerAddCabsReducer,
    ownerAddHotel: ownerAddHotelReducer,
    ownerAddBanner: ownerAddBannerReducer,
+   loadingSlice: alertSlice.reducer
 })
 
 

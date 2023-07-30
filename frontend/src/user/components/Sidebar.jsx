@@ -5,11 +5,12 @@ import {FaMapMarkerAlt} from "react-icons/fa"
 import {FaPlaneDeparture} from "react-icons/fa"
 import { Link } from 'react-router-dom'
 import {TfiWallet} from "react-icons/tfi"
+import { BsFillArrowLeftCircleFill } from "react-icons/bs"
+import { BsFillArrowRightCircleFill } from "react-icons/bs"
 
 
 function Sidebar({children}) {
-    const [active, setActive] = useState("Add Destination")
-    const [open, setOpen] = useState(true);
+    const [open, setOpen] = useState(false);
 
     const menus = [
         
@@ -24,10 +25,17 @@ function Sidebar({children}) {
     <section className='flex gap-6 '>
 
               
-                <div className={`sidebar min-h-screen top-16 mt-16  bottom-0 lg:left-0 p-2 ${open ? 'w-72' :'hidden'} sm:w-1/6  duration-500 text-gray-100 overflow-y-auto text-center bg-black`}>
+                <div className={`sidebar min-h-screen top-16 mt-16  bottom-0 lg:left-0 p-2 ${open ? 'w-72' :'w-16'} duration-500 text-gray-100 overflow-y-auto text-center bg-black`}>
                                 
                     <div className='mt-4 flex flex-col gap-4 relative pt-5'>
-                    
+                          {open ?
+                            <div className=' flex justify-end text-gray-50'>
+                                     <BsFillArrowLeftCircleFill size={26} className='cursor-pointer' onClick={()=>setOpen(!open)}/>
+                            </div>  :
+                             <div className=' flex justify-end text-gray-50'>
+                                    <BsFillArrowRightCircleFill size={26} className='cursor-pointer' onClick={()=>setOpen(!open)}/>
+                             </div>
+                           }
                         {
                         menus?.map((menu,i)=>(
                             <Link  key={i} className='group flex items-center text-sm gap-3.5 font-medium p-2 hover:bg-gray-800 rounded-md ' 

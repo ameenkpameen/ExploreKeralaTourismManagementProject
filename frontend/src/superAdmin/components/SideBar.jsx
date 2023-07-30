@@ -10,15 +10,15 @@ import {MdOutlineLocalOffer} from "react-icons/md"
 import {FaMapMarkerAlt} from "react-icons/fa"
 import { BsListOl } from "react-icons/bs"
 import {MdNotificationsNone} from "react-icons/md"
+import { BsFillArrowLeftCircleFill } from "react-icons/bs"
+import { BsFillArrowRightCircleFill } from "react-icons/bs"
 
 function SideBar({children}) {
-    const [count, setCount] = useState(0)
-    const [submenuOpen, setSubmenuOpen] = useState(false)
 
     const menus = [
         
         {name: "DashBoard", link:"/superadmin", icon: LuLayoutDashboard},
-        {name: "Property Notifications",count:count, link:"/superadmin/notifications", icon: MdNotificationsNone, submenuItems :["Cabs","Hotels","HomeStays"]},
+        {name: "Property Notifications",link:"/superadmin/notifications", icon: MdNotificationsNone, submenuItems :["Cabs","Hotels","HomeStays"]},
         {name: "Users", link:"/superadmin/listusers", icon: AiOutlineUsergroupDelete},
         {name: "Owners", link:"/superadmin/listOwners", icon: RiAdminLine},
         {name: "List of Destinations", link:"/superadmin/listDestinations", icon: FaMapMarkerAlt},
@@ -31,16 +31,23 @@ function SideBar({children}) {
 
     ]
 
-    const [open, setOpen] = useState(true);
+    const [open, setOpen] = useState(false);
     const [active, setActive] = useState("DashBoard")
 
 
   return (
     <section className='flex gap-6 '>
-
-       
-                    <div className={`sidebar min-h-screen top-16 mt-16 bottom-0 lg:left-0 p-2 ${open ? 'w-72' : 'hidden'} duration-500 text-gray-100 overflow-y-auto text-center bg-black`}>
+                      
+                    <div className={`sidebar min-h-screen top-16 mt-16 bottom-0 lg:left-0 p-2 ${open ? 'w-72' : 'w-16'} duration-500 text-gray-100 overflow-y-auto text-center bg-black`}>
                     <div className='mt-4 flex flex-col gap-4 relative pt-5 '>
+                           {open ?
+                            <div className=' flex justify-end text-gray-50'>
+                                     <BsFillArrowLeftCircleFill size={26} className='cursor-pointer' onClick={()=>setOpen(!open)}/>
+                            </div>  :
+                             <div className=' flex justify-end text-gray-50'>
+                                    <BsFillArrowRightCircleFill size={26} className='cursor-pointer' onClick={()=>setOpen(!open)}/>
+                             </div>
+                           }
                         {menus?.map((menu, i) => (
                         <div key={i} className="relative">
                             <Link
@@ -66,7 +73,7 @@ function SideBar({children}) {
 
 
                                 <h2
-                                    className={`${open && "hidden"} absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 overflow-hidden group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit`}
+                                    className={`${open && "hidden"} absolute left-48 bg-white font-semibold whitespace-pre text-gray-900 rounded-md drop-shadow-lg px-0 py-0 w-0 group-hover:px-2 group-hover:py-1 group-hover:left-14 group-hover:duration-300 group-hover:w-fit`}
                                 >
                                     {menu?.name}
                                 </h2>
@@ -77,12 +84,11 @@ function SideBar({children}) {
                     </div>
                     </div>
 
-        
-        <div className='w-full m-3 text-xl  flex justify-center items-center font-bold pt-16 '>
+                    <div className='w-full m-3 text-xl  flex justify-center items-center font-bold pt-16 '>
                         <div className='flex flex-col items-center'>
-                          {children}
+                        {children}
                         </div>
-         </div>
+                    </div>
 
     </section>
   )

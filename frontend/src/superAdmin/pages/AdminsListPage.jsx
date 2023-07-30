@@ -9,9 +9,7 @@ function AdminsListPage() {
   return (
     <div className='bg-opacity-70' style={{ backgroundImage: `url(${image})`, backgroundSize: 'cover' , backdropFilter: 'opacity(0.5)' }}>
         <SuperAdminHeader />
-          <SideBar>
              <ListAdmins />
-          </SideBar>
         <SuperAdminFooter />
     </div>
   )

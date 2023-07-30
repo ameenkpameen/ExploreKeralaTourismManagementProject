@@ -3,12 +3,12 @@ import { useDispatch,useSelector } from 'react-redux';
 import { addDestination } from '../../actions/superAdminActions';
 import SuperAdminError from './SuperAdminError';
 import SuperAdminLoading from './SuperAdminLoading';
-import axios from "axios";
 import {BsFillCheckCircleFill} from 'react-icons/bs'
 import Modal from './Modal';
 import {GiConfirmed} from "react-icons/gi"
 import {BiErrorAlt} from 'react-icons/bi'
 import { useNavigate } from 'react-router-dom';
+import { uploadCloudinary } from '../../api/SuperadminAPI';
 
 function DestinationForm() {
     const dispatch = useDispatch()
@@ -44,10 +44,7 @@ function DestinationForm() {
             formData.append("file", image);
             formData.append("upload_preset", "exploreKerala");
 
-            const response = await axios.post(
-              "https://api.cloudinary.com/v1_1/dp7ydtvg8/image/upload",
-              formData
-            );
+            const response = await uploadCloudinary(formData)
         
             const responseData = response.data;
             setImage_url(responseData.url);
@@ -80,8 +77,10 @@ function DestinationForm() {
 
   return (
         <div>
+          <div className='flex justify-center'>
+          <div className='container min-h-screen mt-32'>
            <div className="container mx-auto py-8">
-                <h1 className="text-2xl text-gray-800 font-bold mb-6 text-center">Add New Destination</h1>
+                <h1 className="text-2xl text-blue-950 font-bold mb-6 text-center">Add New Destination</h1>
                 {error && <SuperAdminError message={error}>{error}</SuperAdminError>}
                 {loading && <SuperAdminLoading />}
                 <form onSubmit={submitHandler} className="w-full max-w-sm mx-auto text-white bg-[#20354b] p-8 rounded-lg shadow-xl drop-shadow-2xl" encType="multipart/form-data">
@@ -175,6 +174,9 @@ function DestinationForm() {
                   </div>
               </Modal>
         </div>
+        </div>
+        </div>
+        
   )
 }
 

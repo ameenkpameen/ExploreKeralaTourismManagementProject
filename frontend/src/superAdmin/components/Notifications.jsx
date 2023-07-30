@@ -7,9 +7,8 @@ import {
     Typography,
     Button
   } from "@material-tailwind/react";
-import axios from 'axios';
-import baseURL from '../../config';
 import ProperNotifications from './ProperNotifications';
+import { superAdminGetPropNotifications } from '../../api/SuperadminAPI';
 
 
 function Notifications() {
@@ -28,7 +27,7 @@ function Notifications() {
 
     useEffect(()=>{
         async function getNotifications(){
-            const {data} = await axios.get(`${baseURL}/superadmin/getpropertiesnotifications`)
+            const {data} = await superAdminGetPropNotifications()
             if(data){
                 setCabdata(data.cabsData)
                 setHomestaydata(data.homestayData)

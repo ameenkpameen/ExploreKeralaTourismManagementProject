@@ -28,8 +28,7 @@ dotenv.config();
 connectDB();
 
 app.use(cors({
-    origin: 'https://superb-babka-f3fe81.netlify.app',
-    credentials : true
+    origin: process.env.FRONT_END_URL
 }))
 
 app.get("/", (req, res) => {
